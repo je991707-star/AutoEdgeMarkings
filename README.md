@@ -2,108 +2,49 @@
 
 **English** | [Русский](README.ru.md)
 
-[![PDX Mods subscribers](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.paradox-interactive.com%2Fmods%3FmodId%3D150863%26os%3Dwindows&query=%24.modDetail.subscriptions&label=PDX%20Mods&suffix=%20subscribers&color=2d6cdf&cacheSeconds=3600)](https://mods.paradoxplaza.com/mods/150863/Windows)
-[![Likes](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.paradox-interactive.com%2Fmods%3FmodId%3D150863%26os%3Dwindows&query=%24.modDetail.ratingsTotal&label=likes&color=e05d6f&cacheSeconds=3600)](https://mods.paradoxplaza.com/mods/150863/Windows)
-[![Mod version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.paradox-interactive.com%2Fmods%3FmodId%3D150863%26os%3Dwindows&query=%24.modDetail.userModVersion&label=version&color=3fb950&cacheSeconds=3600)](https://mods.paradoxplaza.com/mods/150863/Windows)
-[![Game version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.paradox-interactive.com%2Fmods%3FmodId%3D150863%26os%3Dwindows&query=%24.modDetail.requiredVersion&label=Cities%3A%20Skylines%20II&color=8a63d2&cacheSeconds=3600)](https://mods.paradoxplaza.com/mods/150863/Windows)
-
-A road-marking mod for **Cities: Skylines II**: a manual marking editor for intersections plus automatic edge/parking lane markings for ordinary town roads.
-
-![Intersection markings with curved area fills](src/TownRoadLane/Properties/Screenshots/Screenshot_04.jpg)
+Automatic lane markings for ordinary town roads in **Cities: Skylines II** — no external asset dependencies, compatible with Road Builder.
 
 ## Features
 
-### Marking editor
-Click any intersection and draw your own markings:
-
-- **Lines** between anchor dots — solid, dashed (short / normal / long), double solid, a vanilla yellow set (solid / dashed / double / solid + dashed), G87 white or yellow styles, and a curb line, with adjustable curvature and per-segment visibility.
-- **Anchor dots everywhere you need them** — on every lane boundary, on the carriageway edge (including past parking lanes), and in a second "setback" row 8 m before the junction, so you can draw the solid no-lane-change stretch in front of the stop line.
-- **Area fills** over any polygon you outline — junction box (yellow box), white/yellow hatching, green bike lane, red bus lane, concrete, grass, sand, pavement, tiles, asphalt patch.
-- **Hide vanilla markings** per intersection to start from a clean slate.
-- **Pin favourite styles** — star any entry in a style dropdown to keep it at the top of every list.
-- In-game panel (English + Russian) and hotkeys: `Ctrl+M` toggle tool, `Y` cycle line style, `A` area mode, `U` cycle area fill.
-
-![Area mode: outlining a traffic island between anchor dots](src/TownRoadLane/Properties/Screenshots/TRL_a3fa8fbf.jpg)
-
-![Zebra crossing and custom junction markings](src/TownRoadLane/Properties/Screenshots/TRL_9f56d721.jpg)
-
-![Autumn interchange with chevron islands and lane guidance](src/TownRoadLane/Properties/Screenshots/TRL_9c1107eb.jpg)
-
-![Junction with hatched safety islands](src/TownRoadLane/Properties/Screenshots/TRL_2ecbc8fe.jpg)
-
-### Automatic markings
-Ordinary city roads with 3 m lanes get proper edge lane markings — the same way highways do — so parking, sidewalks and stops react correctly. Parking lane markings included. In North American-theme cities, one-way and divided roads (highways included) also get the US-style yellow line along the left, median-side edge — optional, on by default; European themes are unaffected.
-
-![Forest road with edge markings](src/TownRoadLane/Properties/Screenshots/TRL_7f19dcc1.jpg)
-
-![City overview](src/TownRoadLane/Properties/Screenshots/TRL_4996f529.jpg)
+- **Curb-side edge line** — ordinary city roads with 3 m lanes (car, tram and public-transport lanes) get the edge line that highways already have.
+- **US yellow left line** — in North American-theme cities, one-way and divided roads (highways included) get a yellow line along the left, median-side edge. Optional, on by default; European themes are unaffected.
+- **Parallel parking markings** — a line along parallel street-parking zones with a tick at each end of the block.
+- Each feature can be switched off in the options screen and offers vanilla or built-in crisp line styles.
+- When a new city is started from a map, the map's existing roads are rebuilt so they get the markings too.
 
 ## Known limitations
 
-- **The mod is purely visual.** Markings never affect how vehicles actually drive. To change real lane behavior use [Traffic](https://github.com/krzychu124/Traffic) — set up lane connections and directions there first, then draw your markings to match. The two mods don't sync automatically.
-- **Everything snaps to anchor dots — by design.** The dots sit on real road geometry (lane boundaries, carriageway edges, kerb corners, line crossings, plus the setback row 8 m before the junction), which is why markings land exactly on the lanes in a few clicks. There is no freehand placement: for fully freehand markings place the G87 packs' decals and net-lanes by hand — this mod is the fast-and-precise layer for junctions on top of them.
-- **Nearly-tangent line contacts** (well under ~8°) are treated as a graze rather than a crossing — no anchor dot appears at such touch points (by design; prevents jittery duplicate anchors).
-- **Stretched junction connections** — highway ramps/merges and other junctions where the road/junction boundary is not perpendicular to the road — can misplace the anchor dots relative to the painted lines: the paint ends square to each lane, while the dots sit on the skewed boundary. Fix: normalize the junction with the **Node Controller** mod so the connection cross-lines run perpendicular to the road (strongly recommended). The setback dot row 8 m before the junction also stays usable.
-- **Area fill edges** curve along a line only when that line was drawn with this mod. The game's own markings are not traced — along them the fill edge stays a straight segment between its points.
-- **Move It:** after moving or reshaping a road, line markings adapt to the new geometry, but area fills may not — delete and redraw them.
+- **Purely visual.** Markings never change how vehicles drive.
+- Style changes take effect after restarting the game and apply to roads built or rebuilt afterwards; roads already in a save keep the markings they were saved with.
+- Roads without the matching vanilla lanes (for example some asymmetric or one-way 3-lane variants without a `Parking Lane 2`) stay unmarked.
 
 ## How it works
 
-- **The mod replaces the game's lane-marking generator.** The vanilla `SecondaryLaneSystem` — the system that paints lane lines and parking markings along roads — is switched off, and a copy of it runs in its place with the mod's additions: automatic edge lines, the US yellow left edge line and per-junction hiding of vanilla markings. Traffic is unaffected: vehicles drive on the game's primary lanes, which the mod does not touch.
-- **Compatibility.** Because of that replacement, a mod that patches or replaces the same vanilla system conflicts with this one. Mods that add markings as their own decals or net-lanes, such as the G87 packs, are not affected.
-- **Game updates.** After every game update the copy is compared with the new vanilla system before the next release. Update 1.6.2 required no changes.
-- **Log.** A few dozen lines per session in `Logs/TownRoadLane.Mod.log` — attach it to bug reports. For a step-by-step log of what the tool and panel do, add `"VerboseLogging": true` to `TownRoadLane.coc` (next to the `Logs` folder) and restart the game.
-- **Development.** AI tools (Claude) are among the tools used to develop the mod. Every release is built from this repository and tested in-game on a real save before it is published; the full source is here — issues and code review are welcome.
+The mod clones vanilla marking prefabs, gives them its own meshes and host lanes, and registers them before the game initializes prefabs. The game's own `SecondaryLaneSystem` then places them like any vanilla marking, so vehicles, traffic lanes and Road Builder roads are untouched. Built-in crisp line textures are generated procedurally in memory.
 
-## Subscriber growth
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/mxerf/town-road-lane/stats/chart-dark.svg">
-  <img alt="PDX Mods subscribers over time" src="https://raw.githubusercontent.com/mxerf/town-road-lane/stats/chart-light.svg" width="720">
-</picture>
-
-Snapshotted every 6 hours from the public PDX Mods API into the [`stats`](https://github.com/mxerf/town-road-lane/tree/stats) branch.
-
-## Dependencies
-
-Line styles, area fills and the curb texture come from the G87 packs (installed automatically as PDX Mods dependencies):
-
-- [G87] Road Markings (id 97828)
-- [G87] Road Markings: Stripes and Chevrons (id 98624)
-- [G87] Vanilla Curb (id 99062)
-
-Optional: the **Asphalt patch** area fill uses the separate "G87 Vanilla Asphalt Pavement" mod — without it that fill falls back to concrete.
+Log: `Logs/TownRoadLane.Mod.log` (a few dozen lines per session). For more detail add `"VerboseLogging": true` to `TownRoadLane.coc` and restart the game.
 
 ## Building
 
-Requires the official CS2 modding toolchain (`CSII_TOOLPATH` set up by the game's mod project wizard) and Node.js for the UI bundle.
+Requires the official CS2 modding toolchain (`CSII_TOOLPATH` set up by the game's mod project wizard) and the .NET 6 runtime for the toolchain's post-build step.
 
 ```powershell
-cd src/TownRoadLaneUI
-npm install          # once
-cd ..
-dotnet build src/TownRoadLane/TownRoadLane.csproj
+dotnet build src/TownRoadLane/TownRoadLane.csproj -c Release
 ```
 
-The build compiles the C# systems, bundles the React UI via webpack, and deploys everything to the local `Mods/TownRoadLane` folder.
+The build compiles the C# systems and deploys them to the local `Mods/TownRoadLane` folder.
 
 ## Project layout
 
-- `src/TownRoadLane/` — C# mod:
-  - `Components/` — saved marking data (lines, segments, areas, per-node overrides);
-  - `Geometry/` — curve building, intersections, polygon splitting;
-  - `Systems/Topology/` — how lines split at crossings and area outlines, rebuilt when lines or areas change;
-  - `Systems/Emission/` — turns marking data into game lanes and area fills, incl. the replacement lane generator;
-  - `Systems/Prefabs/` — marking and surface prefabs cloned from vanilla and G87 packs;
-  - `Systems/Tool/`, `Systems/UI/` — the in-game tool, its overlay and the panel bindings;
-  - `Diagnostics/` — developer-only dumps, Debug builds only.
-- `src/TownRoadLaneUI/` — React (cohtml) UI: tool panel, toolbar button, localization.
+- `src/TownRoadLane/`
+  - `Systems/Prefabs/` — clones vanilla marking prefabs for the edge, yellow-left and parking lines, plus the built-in line meshes and textures;
+  - `Systems/Emission/` — rebuilds the map's roads once when a new city is started;
+  - `Localization/` — options screen text (English, Russian);
+  - `Diagnostics/` — developer-only prefab dump, Debug builds only.
 
 ## Credits
 
-- **G87** — the marking prefab packs this mod builds its styles on.
-- **TrafficToolEssentials** (ZessonsDE) — the UI build pipeline and several cohtml UI patterns are modelled on it.
-- Author: **mxerf**
+- Based on [Town Road Lane](https://github.com/mxerf/town-road-lane) by **mxerf**. This version removes the intersection marking editor and area fills, keeps only the automatic markings, and makes the mod standalone (no G87 / ExtraAssetsImporter dependency).
 
 ## License
 

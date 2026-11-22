@@ -17,9 +17,6 @@ namespace TownRoadLane.Localization
 
                 { _setting.GetOptionGroupLocaleID(TownRoadLaneSetting.kEdgeGroup), "Curb-side edge line" },
                 { _setting.GetOptionGroupLocaleID(TownRoadLaneSetting.kParkingGroup), "Parallel parking markings" },
-                { _setting.GetOptionGroupLocaleID(TownRoadLaneSetting.kSegmentGroup), "Marking editor — segment splitting" },
-                { _setting.GetOptionGroupLocaleID(TownRoadLaneSetting.kSegmentDevGroup), "Segment splitting — fine tuning" },
-                { _setting.GetOptionGroupLocaleID(TownRoadLaneSetting.kKeybindGroup), "Keybinds" },
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.EdgeLineEnabled)), "Edge line on city roads" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.EdgeLineEnabled)),
@@ -27,7 +24,7 @@ namespace TownRoadLane.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.EdgeLineStyle)), "Edge line style" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.EdgeLineStyle)),
-                    "The mesh style used for the automatic curb-side edge line only — lines drawn with the marking tool keep their own styles. All crisp and vanilla styles are built in with no external dependencies. Changes take effect after the game is restarted." },
+                    "The mesh style used for the automatic curb-side edge line. All crisp and vanilla styles are built in with no external dependencies. Changes take effect after the game is restarted." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.YellowLeftLineEnabled)), "Yellow left edge line (US)" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.YellowLeftLineEnabled)),
@@ -44,42 +41,6 @@ namespace TownRoadLane.Localization
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.ParkingEndStyle)), "Parking end-tick style" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.ParkingEndStyle)),
                     "The short perpendicular tick at the start and end of a parking block. \"None\" disables the ticks. All styles are built in. Changes take effect after the game is restarted." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.SegmentMinLengthM)), "Minimum segment length (m)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.SegmentMinLengthM)),
-                    "When drawn lines cross, they are split into segments (each can be hidden or restyled). Segments shorter than this merge into their neighbour. Lower = finer segments on densely packed markings; higher = fewer slivers from lines that merely graze each other. Default: 1.0 m. Applies to a junction the next time its lines are edited, and everywhere after reloading the save." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.SegmentAnchorDeadZoneM)), "Dead zone around anchor dots (m)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.SegmentAnchorDeadZoneM)),
-                    "Crossings closer than this to a line's endpoint don't split the line. Lines that leave the same anchor dot overlap for the first metre or two — without the dead zone that overlap spawns phantom micro-segments. Lower = splits allowed closer to the dots; higher = calmer behaviour around anchors. Default: 2.0 m. Applies to a junction the next time its lines are edited, and everywhere after reloading the save." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.SegmentMinCrossingAngleDeg)), "Minimum crossing angle (°)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.SegmentMinCrossingAngleDeg)),
-                    "Two lines meeting at less than this angle count as a graze, not a crossing — no split. At 0° every touch splits, and near-parallel lines can produce clusters of micro-segments. Default: 8°. Applies to a junction the next time its lines are edited, and everywhere after reloading the save." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.SegmentHitClusterM)), "Crossing cluster radius (m)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.SegmentHitClusterM)),
-                    "A shallow crossing is reported as several near-identical intersection points; points within this radius collapse into a single split. Lower = more of those near-duplicates survive as separate splits. Default: 1.5 m. Applies to a junction the next time its lines are edited, and everywhere after reloading the save." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.ActivateMarkingTool)), "Activate marking tool" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.ActivateMarkingTool)),
-                    "Toggles the per-node marking customisation tool. Same as the keyboard shortcut below, but always works (button cannot be intercepted by other mods)." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.ToggleMarkingToolBinding)), "Toggle marking tool (hotkey)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.ToggleMarkingToolBinding)),
-                    "Activates or deactivates the per-node marking customisation tool. Default Ctrl+M. If the hotkey doesn't work (other mod intercepts), use the button above instead." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.CycleMarkingStyleBinding)), "Cycle marking style (hotkey)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.CycleMarkingStyleBinding)),
-                    "While the marking tool is active, cycles through Solid → Dashed → … The chosen style is used for the NEXT line you draw. Default Y. The colour of the endpoint dots reflects the current style." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.EnterAreaModeBinding)), "Start area polygon (hotkey)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.EnterAreaModeBinding)),
-                    "With a node selected, starts the polygon-area mode: click anchor dots to build a filled region. Press the same key again or Esc to cancel. Default A." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.CycleAreaStyleBinding)), "Cycle area style (hotkey)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.CycleAreaStyleBinding)),
-                    "While the marking tool is active, cycles the fill style for the NEXT area you close (Concrete → Junction Box → White Stripes → Yellow Stripes → Green Bike → Red Bus → Asphalt → Grass/Sand/Pavement/Tiles). Default U." },
 
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolid), "White solid" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolidThick), "White solid (thick)" },

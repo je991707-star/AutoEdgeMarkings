@@ -8,12 +8,11 @@ using UnityEngine;
 namespace TownRoadLane.Systems.Prefabs
 {
     /// <summary>
-    /// Builds self-contained <see cref="RenderPrefab"/> line and curb decals by cloning vanilla
-    /// line meshes (reusing their proven CurvedDecal geometry and bounds) and attaching in-memory
-    /// <see cref="SurfaceAsset"/>s backed by <see cref="ProceduralTextureFactory"/> textures.
-    ///
-    /// Replaces all external G87 NetLaneDecal and Vanilla Curb RenderPrefabs with zero EAI
-    /// dependency and zero disk cache writes.
+    /// Builds self-contained <see cref="RenderPrefab"/> line decals for the edge-line and parking
+    /// style options by cloning vanilla line meshes (reusing their proven CurvedDecal geometry and
+    /// bounds) and attaching in-memory <see cref="SurfaceAsset"/>s backed by
+    /// <see cref="ProceduralTextureFactory"/> textures. No external asset dependency and no disk
+    /// cache writes.
     /// </summary>
     internal static class CustomLineMeshFactory
     {
@@ -22,8 +21,6 @@ namespace TownRoadLane.Systems.Prefabs
         public const string kCrispWhiteSolid = "TRL Crisp White Solid Mesh";
         public const string kCrispWhiteDashed = "TRL Crisp White Dashed Mesh";
         public const string kCrispYellowSolid = "TRL Crisp Yellow Solid Mesh";
-        public const string kCrispYellowDashed = "TRL Crisp Yellow Dashed Mesh";
-        public const string kCurb = "TRL Curb Mesh";
         public const string kBlueSolid = "TRL Blue Solid Mesh";
         public const string kWhiteTerminal = "TRL White Terminal Mesh";
         public const string kYellowTerminal = "TRL Yellow Terminal Mesh";
@@ -68,7 +65,6 @@ namespace TownRoadLane.Systems.Prefabs
             public Func<Texture2D> buildTexture;
             // _BaseColor multiplier; null = white.
             public Color? tint;
-            public int drawOrderOffset;
         }
 
         private static readonly MeshSpec[] kSpecs =
@@ -76,8 +72,6 @@ namespace TownRoadLane.Systems.Prefabs
             new() { name = kCrispWhiteSolid,  sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kCrispWhiteSolid, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f) },
             new() { name = kCrispWhiteDashed, sourceVanillaMesh = kVanillaDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kCrispWhiteDashed, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f, dashFraction: 0.54f) },
             new() { name = kCrispYellowSolid, sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kCrispYellowSolid, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.78f) },
-            new() { name = kCrispYellowDashed,sourceVanillaMesh = kVanillaDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kCrispYellowDashed, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.78f, dashFraction: 0.54f) },
-            new() { name = kCurb,             sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateCurbTexture(), drawOrderOffset = 1 },
             new() { name = kBlueSolid,        sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kBlueSolid, ProceduralTextureFactory.kPaintBlue, widthFraction: 0.72f) },
             new() { name = kWhiteTerminal,    sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kWhiteTerminal, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.88f) },
             new() { name = kYellowTerminal,   sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kYellowTerminal, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.88f) },
@@ -185,8 +179,6 @@ namespace TownRoadLane.Systems.Prefabs
             if (texAsset != null) surfaceAsset.UpdateTexture("_BaseColorMap", texAsset);
             if (surfaceAsset.HasProperty("_BaseColor"))
                 surfaceAsset.UpdateColors(new[] { new KeyValuePair<string, Color>("_BaseColor", spec.tint ?? Color.white) });
-            if (spec.drawOrderOffset != 0 && surfaceAsset.TryGetFloatProperty("_DrawOrder", out float drawOrder))
-                surfaceAsset.UpdateFloats(new[] { new KeyValuePair<string, float>("_DrawOrder", drawOrder + spec.drawOrderOffset) });
             // Pin refcount >= 1 so BatchMeshSystem never unloads this in-memory surface.
             surfaceAsset.Load(0, loadTextures: true, TextureAsset.KeepOnCPU.Object, useVT: false);
             s_PinnedSurfaces.Add(surfaceAsset);
@@ -196,10 +188,6 @@ namespace TownRoadLane.Systems.Prefabs
 
             clone.surfaceAssets = new[] { surfaceAsset };
             clone.manualVTRequired = false;
-
-            if (spec.drawOrderOffset != 0 && clone.TryGet<DecalProperties>(out var decalProps) && decalProps != null)
-                decalProps.m_RendererPriority += spec.drawOrderOffset;
-
             return clone;
         }
 

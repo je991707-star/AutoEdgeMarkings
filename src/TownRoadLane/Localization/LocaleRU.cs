@@ -17,9 +17,6 @@ namespace TownRoadLane.Localization
 
                 { _setting.GetOptionGroupLocaleID(TownRoadLaneSetting.kEdgeGroup), "Краевая линия у бордюра" },
                 { _setting.GetOptionGroupLocaleID(TownRoadLaneSetting.kParkingGroup), "Разметка параллельной парковки" },
-                { _setting.GetOptionGroupLocaleID(TownRoadLaneSetting.kSegmentGroup), "Редактор разметки — разрезание на сегменты" },
-                { _setting.GetOptionGroupLocaleID(TownRoadLaneSetting.kSegmentDevGroup), "Разрезание сегментов — тонкая настройка" },
-                { _setting.GetOptionGroupLocaleID(TownRoadLaneSetting.kKeybindGroup), "Горячие клавиши" },
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.EdgeLineEnabled)), "Краевая линия на городских дорогах" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.EdgeLineEnabled)),
@@ -27,7 +24,7 @@ namespace TownRoadLane.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.EdgeLineStyle)), "Стиль краевой линии" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.EdgeLineStyle)),
-                    "Стиль меша только автоматической краевой линии — линии, нарисованные инструментом разметки, сохраняют собственные стили. Все чёткие и ванильные стили встроены без внешних зависимостей. Изменения вступают в силу после перезапуска игры." },
+                    "Стиль меша автоматической краевой линии. Все чёткие и ванильные стили встроены без внешних зависимостей. Изменения вступают в силу после перезапуска игры." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.YellowLeftLineEnabled)), "Жёлтая левая краевая (США)" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.YellowLeftLineEnabled)),
@@ -44,42 +41,6 @@ namespace TownRoadLane.Localization
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.ParkingEndStyle)), "Стиль концевой черты парковки" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.ParkingEndStyle)),
                     "Короткая поперечная черта в начале и конце парковочного квартала. «Нет» отключает черты. Все стили встроены в мод. Изменения вступают в силу после перезапуска игры." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.SegmentMinLengthM)), "Минимальная длина сегмента (м)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.SegmentMinLengthM)),
-                    "Пересекаясь, нарисованные линии режутся на сегменты (каждый можно скрыть или перекрасить). Сегменты короче этого значения сливаются с соседним. Меньше — более дробные сегменты на плотной разметке; больше — меньше «щепок» от линий, которые лишь слегка задевают друг друга. По умолчанию: 1,0 м. Применяется к перекрёстку при следующей правке его линий, а ко всему — после перезагрузки сохранения." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.SegmentAnchorDeadZoneM)), "Мёртвая зона у точек-якорей (м)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.SegmentAnchorDeadZoneM)),
-                    "Пересечения ближе этого расстояния к концу линии не режут её. Линии, выходящие из одной точки-якоря, первые метр-два идут внахлёст — без мёртвой зоны этот нахлёст порождает фантомные микросегменты. Меньше — резы разрешены ближе к точкам; больше — спокойнее возле якорей. По умолчанию: 2,0 м. Применяется к перекрёстку при следующей правке его линий, а ко всему — после перезагрузки сохранения." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.SegmentMinCrossingAngleDeg)), "Минимальный угол пересечения (°)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.SegmentMinCrossingAngleDeg)),
-                    "Линии, встречающиеся под углом меньше этого, считаются скользящим касанием, а не пересечением — без реза. При 0° режет любое касание, и почти параллельные линии могут дать пачку микросегментов. По умолчанию: 8°. Применяется к перекрёстку при следующей правке его линий, а ко всему — после перезагрузки сохранения." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.SegmentHitClusterM)), "Радиус склейки пересечений (м)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.SegmentHitClusterM)),
-                    "Пологое пересечение распознаётся как несколько почти совпадающих точек; точки в этом радиусе склеиваются в один рез. Меньше — больше таких почти-дублей выживает отдельными резами. По умолчанию: 1,5 м. Применяется к перекрёстку при следующей правке его линий, а ко всему — после перезагрузки сохранения." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.ActivateMarkingTool)), "Активировать инструмент разметки" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.ActivateMarkingTool)),
-                    "Включает/выключает инструмент настройки разметки перекрёстков. То же, что горячая клавиша ниже, но работает всегда (кнопку не может перехватить другой мод)." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.ToggleMarkingToolBinding)), "Инструмент разметки (клавиша)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.ToggleMarkingToolBinding)),
-                    "Включает или выключает инструмент настройки разметки перекрёстков. По умолчанию Ctrl+M. Если клавиша не срабатывает (перехвачена другим модом), используйте кнопку выше." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.CycleMarkingStyleBinding)), "Стиль линии по кругу (клавиша)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.CycleMarkingStyleBinding)),
-                    "При активном инструменте листает стили: сплошная → пунктир → … Выбранный стиль применяется к СЛЕДУЮЩЕЙ линии. По умолчанию Y. Цвет точек-якорей отражает текущий стиль." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.EnterAreaModeBinding)), "Режим области (клавиша)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.EnterAreaModeBinding)),
-                    "При выбранном узле запускает режим полигональной области: кликайте по опорным точкам, чтобы построить заливку. Повторное нажатие или Esc — отмена. По умолчанию A." },
-
-                { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.CycleAreaStyleBinding)), "Стиль области по кругу (клавиша)" },
-                { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.CycleAreaStyleBinding)),
-                    "При активном инструменте листает стиль заливки для СЛЕДУЮЩЕЙ замкнутой области (бетон → вафельная разметка → белая штриховка → жёлтая штриховка → велополоса → автобусная полоса → асфальт → покрытия). По умолчанию U." },
 
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolid), "Белая сплошная" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolidThick), "Белая сплошная (толстая)" },

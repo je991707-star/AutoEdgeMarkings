@@ -49,16 +49,7 @@
 		<Reference Include="Colossal.AssetPipeline">
 			<Private>false</Private>
 		</Reference>
-		<Reference Include="Colossal.UI">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.UI.Binding">
-			<Private>false</Private>
-		</Reference>
 		<Reference Include="Colossal.Localization">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Unity.InputSystem">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
@@ -92,44 +83,17 @@
 		<None Include="$(ModTargetsFile)" Link="Properties\Mod.targets" />
 	</ItemGroup>
 
-	<!-- Developer-only prefab surveys and dumps: compiled in Debug, never shipped.
-	     Registration sites are under #if DEBUG in Mod.cs. -->
+	<!-- Developer-only prefab survey: compiled in Debug, never shipped.
+	     The registration site is under #if DEBUG in Mod.cs. -->
 	<ItemGroup Condition="'$(Configuration)' == 'Release'">
 		<Compile Remove="Diagnostics\RoadPrefabDumpSystem.cs" />
-		<Compile Remove="Diagnostics\AreasPrototypeSystem.cs" />
-		<Compile Remove="Diagnostics\ParkingPairDumpSystem.cs" />
-		<Compile Remove="Diagnostics\UserPairEmissionDumpSystem.cs" />
 	</ItemGroup>
 
-	<!-- ModVersion in PublishConfiguration.xml is the single version source: it sets the
-	     assembly version here, and webpack.config.js puts it in the UI module banner. -->
+	<!-- ModVersion in PublishConfiguration.xml is the single version source for the assembly version. -->
 	<Target Name="VersionFromPublishConfiguration" BeforeTargets="GetAssemblyVersion">
 		<XmlPeek XmlInputPath="$(PublishConfigurationPath)" Query="/Publish/ModVersion/@Value">
 			<Output TaskParameter="Result" PropertyName="Version" />
 		</XmlPeek>
-	</Target>
-
-	<!-- Builds the UI bundle and copies it into $(OutDir) before Mod.targets' AfterBuild deploy
-	     step, which mirrors OutDir into the mod folder. Skipped until `npm install` has been run
-	     in the UI project. Modelled on the BuildFrontend target of TrafficToolEssentials. -->
-	<Target Name="BuildFrontend" BeforeTargets="AfterBuild" Condition="'$(OS)' == 'Windows_NT' And Exists('..\TownRoadLaneUI\node_modules')">
-		<Message Text="[BuildFrontend] Running webpack in ..\TownRoadLaneUI\" Importance="high" />
-		<Exec Command="npm run build" WorkingDirectory="..\TownRoadLaneUI\" ContinueOnError="false" />
-		<Copy SourceFiles="..\TownRoadLaneUI\dist\TownRoadLane.mjs" DestinationFolder="$(OutDir)" />
-		<Copy SourceFiles="..\TownRoadLaneUI\dist\TownRoadLane.css" DestinationFolder="$(OutDir)" Condition="Exists('..\TownRoadLaneUI\dist\TownRoadLane.css')" />
-		<!-- Static UI assets from dist/images/. The game serves the deployed mod folder as
-		     coui://ui-mods/, so keeping the images/ subfolder is enough. -->
-		<ItemGroup>
-			<TRLUIImageFiles Include="..\TownRoadLaneUI\dist\images\**\*.*" />
-		</ItemGroup>
-		<Copy SourceFiles="@(TRLUIImageFiles)" DestinationFiles="@(TRLUIImageFiles->'$(OutDir)images\%(RecursiveDir)%(Filename)%(Extension)')" Condition="'@(TRLUIImageFiles)' != ''" />
-		<!-- The game reads the UI module manifest from the .mjs banner, not from mod.json;
-		     mod.json ships only to match the usual UI mod layout. -->
-		<Copy SourceFiles="..\TownRoadLaneUI\mod.json" DestinationFolder="$(OutDir)" />
-		<Message Text="[BuildFrontend] Copied UI bundle + manifest into $(OutDir)" Importance="high" />
-	</Target>
-	<Target Name="BuildFrontendMissingWarn" BeforeTargets="AfterBuild" Condition="'$(OS)' == 'Windows_NT' And !Exists('..\TownRoadLaneUI\node_modules')">
-		<Message Text="[BuildFrontend] Skipping — ..\TownRoadLaneUI\node_modules not found. Run `npm install` inside src\TownRoadLaneUI\ to enable the UI bundle build." Importance="high" />
 	</Target>
 
 </Project>
