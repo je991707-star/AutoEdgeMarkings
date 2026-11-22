@@ -109,7 +109,10 @@ namespace TownRoadLane
             // There is deliberately no system that reapplies settings at runtime: refreshing the
             // clone prefabs (UpdatePrefab) in a live world leaves existing sublanes with stale
             // PrefabRefs, and the next secondary lane rebuild crashes natively inside a Burst job.
-            // Settings apply on the next save load through the clone systems' PrefabUpdate pass.
+            // Settings apply on the next save load: markings are saved with the map, so
+            // VanillaLaneRefreshSystem marks all roads Updated once after loading and vanilla
+            // SecondaryLaneSystem (Modification4B) rebuilds them with the current clone prefabs.
+            updateSystem.UpdateAt<VanillaLaneRefreshSystem>(SystemUpdatePhase.Modification1);
 
             // ToolBaseSystem adds itself to ToolSystem.tools in OnCreate; registering is enough.
             // Game.UpdateSystem does not read Unity's [UpdateBefore]/[UpdateAfter] attributes, so
