@@ -23,7 +23,7 @@
 		<!-- The .pdb ships next to the .dll, so build-machine paths would show up in users'
 		     stack traces. PathMap keeps file:line but replaces the local path with a neutral
 		     prefix. SourceLink is off because its JSON map would still contain the local path. -->
-		<PathMap>$(MSBuildProjectDirectory)=TownRoadLane</PathMap>
+		<PathMap>$(MSBuildProjectDirectory)=AutoEdgeMarkings</PathMap>
 		<EnableSourceLink>false</EnableSourceLink>
 		<!-- No git hash in the informational version: the Windows build tree is a file copy,
 		     so its HEAD does not match the sources being built. -->

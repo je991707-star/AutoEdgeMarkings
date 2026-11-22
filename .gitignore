@@ -3,15 +3,13 @@
 [Oo]bj/
 Library/
 dist/
-
-# Node / React UI artefacts (src/TownRoadLaneUI/)
 node_modules/
 
 # Decompiled game assemblies (local reference only, ~41M, do not commit)
 decomp/
 
 # Game assemblies + Entities source generators copied from a Windows install,
-# for reference-only builds on non-Windows (see src/TownRoadLane/LocalRefs.props)
+# for reference-only builds on non-Windows (see src/AutoEdgeMarkings/LocalRefs.props)
 _managed/
 
 # External mod sources cloned for reference (Traffic, RoadBuilder, ...)

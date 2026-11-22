@@ -8,7 +8,7 @@ using Game.Prefabs;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace TownRoadLane.Diagnostics
+namespace AutoEdgeMarkings.Diagnostics
 {
     /// <summary>
     /// One-shot dump of every loaded road prefab's section, piece and lane structure, plus the

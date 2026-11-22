@@ -1,4 +1,4 @@
-# Town Road Lane — дорожная разметка
+# Auto Edge Markings — автоматическая разметка
 
 [English](README.md) | **Русский**
 
@@ -22,14 +22,14 @@
 
 Мод клонирует ванильные префабы разметки, назначает им свои меши и полосы-носители и регистрирует их до инициализации префабов игрой. Затем штатная система игры `SecondaryLaneSystem` размещает их как обычную ванильную разметку, поэтому транспорт, полосы и дороги Road Builder не затрагиваются. Встроенные текстуры чётких линий генерируются процедурно в памяти.
 
-Лог: `Logs/TownRoadLane.Mod.log`. Для подробного лога добавьте `"VerboseLogging": true` в `TownRoadLane.coc` и перезапустите игру.
+Лог: `Logs/AutoEdgeMarkings.Mod.log`. Для подробного лога добавьте `"VerboseLogging": true` в `AutoEdgeMarkings.coc` и перезапустите игру.
 
 ## Сборка
 
 Нужен официальный тулчейн моддинга CS2 (`CSII_TOOLPATH`) и .NET 6 runtime для пост-обработки сборки.
 
 ```powershell
-dotnet build src/TownRoadLane/TownRoadLane.csproj -c Release
+dotnet build src/AutoEdgeMarkings/AutoEdgeMarkings.csproj -c Release
 ```
 
 ## Благодарности

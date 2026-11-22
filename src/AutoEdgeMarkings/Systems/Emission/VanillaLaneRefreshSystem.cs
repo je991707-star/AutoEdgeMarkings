@@ -6,7 +6,7 @@ using Game.Net;
 using Game.Tools;
 using Unity.Entities;
 
-namespace TownRoadLane.Systems.Emission
+namespace AutoEdgeMarkings.Systems.Emission
 {
     /// <summary>
     /// Marks every road edge and node Updated once when a new game starts from a map, so vanilla

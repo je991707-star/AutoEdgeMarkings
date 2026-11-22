@@ -6,7 +6,7 @@ using Game.Prefabs;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace TownRoadLane.Systems.Prefabs
+namespace AutoEdgeMarkings.Systems.Prefabs
 {
     /// <summary>
     /// Marks parallel street-parking zones, which vanilla leaves as bare asphalt.
@@ -48,10 +48,10 @@ namespace TownRoadLane.Systems.Prefabs
         private enum Role { Longitudinal, End }
         private static readonly (string src, string clone, Role role)[] kRecipes =
         {
-            ("EU Car Bay Line",       "TownRoadLane EU Parallel Parking Line", Role.Longitudinal),
-            ("NA Car Bay Line",       "TownRoadLane NA Parallel Parking Line", Role.Longitudinal),
-            ("EU Parking Cross Line", "TownRoadLane EU Parallel Parking End",  Role.End),
-            ("NA Parking Cross Line", "TownRoadLane NA Parallel Parking End",  Role.End),
+            ("EU Car Bay Line",       "AEM EU Parking Line", Role.Longitudinal),
+            ("NA Car Bay Line",       "AEM NA Parking Line", Role.Longitudinal),
+            ("EU Parking Cross Line", "AEM EU Parking End",  Role.End),
+            ("NA Parking Cross Line", "AEM NA Parking End",  Role.End),
         };
 
         private PrefabSystem _prefabSystem;

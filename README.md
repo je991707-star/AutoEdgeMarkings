@@ -1,4 +1,4 @@
-# Town Road Lane — Road Markings
+# Auto Edge Markings
 
 **English** | [Русский](README.ru.md)
 
@@ -22,21 +22,21 @@ Automatic lane markings for ordinary town roads in **Cities: Skylines II** — n
 
 The mod clones vanilla marking prefabs, gives them its own meshes and host lanes, and registers them before the game initializes prefabs. The game's own `SecondaryLaneSystem` then places them like any vanilla marking, so vehicles, traffic lanes and Road Builder roads are untouched. Built-in crisp line textures are generated procedurally in memory.
 
-Log: `Logs/TownRoadLane.Mod.log` (a few dozen lines per session). For more detail add `"VerboseLogging": true` to `TownRoadLane.coc` and restart the game.
+Log: `Logs/AutoEdgeMarkings.Mod.log` (a few dozen lines per session). For more detail add `"VerboseLogging": true` to `AutoEdgeMarkings.coc` and restart the game.
 
 ## Building
 
 Requires the official CS2 modding toolchain (`CSII_TOOLPATH` set up by the game's mod project wizard) and the .NET 6 runtime for the toolchain's post-build step.
 
 ```powershell
-dotnet build src/TownRoadLane/TownRoadLane.csproj -c Release
+dotnet build src/AutoEdgeMarkings/AutoEdgeMarkings.csproj -c Release
 ```
 
-The build compiles the C# systems and deploys them to the local `Mods/TownRoadLane` folder.
+The build compiles the C# systems and deploys them to the local `Mods/AutoEdgeMarkings` folder.
 
 ## Project layout
 
-- `src/TownRoadLane/`
+- `src/AutoEdgeMarkings/`
   - `Systems/Prefabs/` — clones vanilla marking prefabs for the edge, yellow-left and parking lines, plus the built-in line meshes and textures;
   - `Systems/Emission/` — rebuilds the map's roads once when a new city is started;
   - `Localization/` — options screen text (English, Russian);

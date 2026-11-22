@@ -5,7 +5,7 @@ using Colossal.Logging;
 using Game.Prefabs;
 using UnityEngine;
 
-namespace TownRoadLane.Systems.Prefabs
+namespace AutoEdgeMarkings.Systems.Prefabs
 {
     /// <summary>
     /// Builds self-contained <see cref="RenderPrefab"/> line decals for the edge-line and parking
@@ -18,17 +18,17 @@ namespace TownRoadLane.Systems.Prefabs
     {
         private static readonly ILog log = Mod.log;
 
-        public const string kCrispWhiteSolid = "TRL Crisp White Solid Mesh";
-        public const string kCrispWhiteDashed = "TRL Crisp White Dashed Mesh";
-        public const string kCrispYellowSolid = "TRL Crisp Yellow Solid Mesh";
-        public const string kBlueSolid = "TRL Blue Solid Mesh";
-        public const string kWhiteTerminal = "TRL White Terminal Mesh";
-        public const string kYellowTerminal = "TRL Yellow Terminal Mesh";
+        public const string kCrispWhiteSolid = "AEM Crisp White Solid Mesh";
+        public const string kCrispWhiteDashed = "AEM Crisp White Dashed Mesh";
+        public const string kCrispYellowSolid = "AEM Crisp Yellow Solid Mesh";
+        public const string kBlueSolid = "AEM Blue Solid Mesh";
+        public const string kWhiteTerminal = "AEM White Terminal Mesh";
+        public const string kYellowTerminal = "AEM Yellow Terminal Mesh";
         // Parking-line variants on the short, dense dash geometry; the lane-divider dash above
         // makes a parking edge read as an extra driving lane.
-        public const string kCrispWhiteParkingDashed = "TRL Crisp White Parking Dashed Mesh";
-        public const string kCrispYellowParkingDashed = "TRL Crisp Yellow Parking Dashed Mesh";
-        public const string kBlueParkingDashed = "TRL Blue Parking Dashed Mesh";
+        public const string kCrispWhiteParkingDashed = "AEM Crisp White Parking Dashed Mesh";
+        public const string kCrispYellowParkingDashed = "AEM Crisp Yellow Parking Dashed Mesh";
+        public const string kBlueParkingDashed = "AEM Blue Parking Dashed Mesh";
 
         private const string kVanillaSolidSource = "White Solid Line Mesh";
         private const string kVanillaDashedSource = "White Dashed Line Mesh";
@@ -39,7 +39,7 @@ namespace TownRoadLane.Systems.Prefabs
         private static readonly List<TextureAsset> s_PinnedTextures = new List<TextureAsset>();
         private static readonly HashSet<string> s_Failed = new HashSet<string>();
 
-        private const string kAssetSubPath = "TownRoadLane";
+        private const string kAssetSubPath = "AutoEdgeMarkings";
         private static ILocalAssetDatabase s_Database;
 
         // Transient in-memory database (only an empty temp folder is created; nothing is saved),

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace TownRoadLane.Systems.Prefabs
+namespace AutoEdgeMarkings.Systems.Prefabs
 {
     /// <summary>
     /// Generates self-contained, tileable procedural <see cref="Texture2D"/> line textures for the

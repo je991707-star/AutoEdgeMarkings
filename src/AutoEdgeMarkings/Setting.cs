@@ -4,16 +4,16 @@ using Colossal.Core;
 using Colossal.IO.AssetDatabase;
 using Game.Modding;
 using Game.Settings;
-using TownRoadLane.Systems.Prefabs;
+using AutoEdgeMarkings.Systems.Prefabs;
 
-namespace TownRoadLane
+namespace AutoEdgeMarkings
 {
     /// <summary>
     /// Mod settings: an on/off switch and a mesh style (vanilla or built-in procedural) per
     /// automatic feature. Each clone system reads its style when it builds prefabs. Style
     /// changes need a game restart (see the note below the parking group).
     /// </summary>
-    [FileLocation(nameof(TownRoadLane))]
+    [FileLocation(nameof(AutoEdgeMarkings))]
     [SettingsUIGroupOrder(kEdgeGroup, kParkingGroup)]
     [SettingsUIShowGroupName(kEdgeGroup, kParkingGroup)]
     // The class name must be unique among all installed mods: ApplyAndSave() calls
@@ -21,13 +21,13 @@ namespace TownRoadLane
     // across every mod and takes the first hit. With the template name "Setting" and another
     // template-based mod installed, changes are written to the other mod's file and ours never
     // persist.
-    public class TownRoadLaneSetting : ModSetting
+    public class AutoEdgeMarkingsSetting : ModSetting
     {
         public const string kSection = "Main";
         public const string kEdgeGroup = "EdgeLine";
         public const string kParkingGroup = "ParkingMarkings";
 
-        public TownRoadLaneSetting(IMod mod) : base(mod) { }
+        public AutoEdgeMarkingsSetting(IMod mod) : base(mod) { }
 
         // Vanilla ApplyAndSave() is async void: every checkbox click starts its own
         // read-modify-write of the settings file, and two quick changes race, so the slower task
@@ -87,7 +87,7 @@ namespace TownRoadLane
         public bool EdgeLineEnabled { get; set; } = true;
 
         [SettingsUISection(kSection, kEdgeGroup)]
-        [SettingsUIDisableByCondition(typeof(TownRoadLaneSetting), nameof(IsEdgeDisabled))]
+        [SettingsUIDisableByCondition(typeof(AutoEdgeMarkingsSetting), nameof(IsEdgeDisabled))]
         public EdgeLineStyleEnum EdgeLineStyle { get; set; } = EdgeLineStyleEnum.WhiteSolid;
 
         // US convention: NA-theme cities get a yellow line on the left (median) edge of one-way
@@ -95,7 +95,7 @@ namespace TownRoadLane
         // check is needed: the yellow clone is based on the NA prefab and inherits its
         // ThemeObject, so EU-theme cities never spawn it.
         [SettingsUISection(kSection, kEdgeGroup)]
-        [SettingsUIDisableByCondition(typeof(TownRoadLaneSetting), nameof(IsEdgeDisabled))]
+        [SettingsUIDisableByCondition(typeof(AutoEdgeMarkingsSetting), nameof(IsEdgeDisabled))]
         public bool YellowLeftLineEnabled { get; set; } = true;
 
         // Parallel street-parking markings.
@@ -104,13 +104,13 @@ namespace TownRoadLane
         public bool ParkingMarkingsEnabled { get; set; } = true;
 
         [SettingsUISection(kSection, kParkingGroup)]
-        [SettingsUIDisableByCondition(typeof(TownRoadLaneSetting), nameof(IsParkingDisabled))]
-        // Default uses the built-in crisp white dashed style (enum member name kept for .coc
-        // compatibility with older TownRoadLane settings files).
+        [SettingsUIDisableByCondition(typeof(AutoEdgeMarkingsSetting), nameof(IsParkingDisabled))]
+        // Default uses the built-in crisp white dashed style. The "_G87" suffix marks the built-in
+        // crisp styles (historical name from the G87 decals they replaced).
         public ParkingLineStyleEnum ParkingLineStyle { get; set; } = ParkingLineStyleEnum.WhiteDashed_G87;
 
         [SettingsUISection(kSection, kParkingGroup)]
-        [SettingsUIDisableByCondition(typeof(TownRoadLaneSetting), nameof(IsParkingDisabled))]
+        [SettingsUIDisableByCondition(typeof(AutoEdgeMarkingsSetting), nameof(IsParkingDisabled))]
         public ParkingEndStyleEnum ParkingEndStyle { get; set; } = ParkingEndStyleEnum.WhiteSolid;
 
         // There is deliberately no runtime "reapply" button. Refreshing the clone prefabs
@@ -124,7 +124,7 @@ namespace TownRoadLane
         public bool IsParkingDisabled() => !ParkingMarkingsEnabled;
 
         // Per-prefab registration messages at Debug level, for bug reports. Hidden from
-        // the options screen; to enable, set "VerboseLogging": true in TownRoadLane.coc and
+        // the options screen; to enable, set "VerboseLogging": true in AutoEdgeMarkings.coc and
         // restart the game.
         [SettingsUIHidden]
         public bool VerboseLogging { get; set; } = false;
@@ -133,7 +133,7 @@ namespace TownRoadLane
         // Developer prefab dump at boot (RoadPrefabDumpSystem): tens of
         // thousands of log lines per start, enough for Skyve to flag the mod for extreme logging.
         // Debug builds only and hidden from the options screen; to enable, set
-        // "DiagnosticDumps": true in TownRoadLane.coc and restart the game.
+        // "DiagnosticDumps": true in AutoEdgeMarkings.coc and restart the game.
         [SettingsUIHidden]
         public bool DiagnosticDumps { get; set; } = false;
 #endif

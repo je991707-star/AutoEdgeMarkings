@@ -5,7 +5,7 @@ using Game;
 using Game.Prefabs;
 using Unity.Entities;
 
-namespace TownRoadLane.Systems.Prefabs
+namespace AutoEdgeMarkings.Systems.Prefabs
 {
     /// <summary>
     /// Auto edge line: ordinary city roads (3 m car lanes) get the curb-side edge line that
@@ -47,12 +47,12 @@ namespace TownRoadLane.Systems.Prefabs
 
         private static readonly Recipe[] kRecipes =
         {
-            new() { isNA = false, sourcePrefabName = "EU Highway Edge Line", cloneName = "TownRoadLane EU Auto Edge Line", fallbackMesh = "White Solid Line Mesh" },
-            new() { isNA = true,  sourcePrefabName = "NA Highway Edge Line", cloneName = "TownRoadLane NA Auto Edge Line", fallbackMesh = "White Solid Line Mesh" },
+            new() { isNA = false, sourcePrefabName = "EU Highway Edge Line", cloneName = "AEM EU Edge Line", fallbackMesh = "White Solid Line Mesh" },
+            new() { isNA = true,  sourcePrefabName = "NA Highway Edge Line", cloneName = "AEM NA Edge Line", fallbackMesh = "White Solid Line Mesh" },
             // NA source only: the clone inherits the NA ThemeObject, so theme requirements keep it
             // out of EU cities. The white NA clone above stops mirroring while
             // YellowLeftLineEnabled is on.
-            new() { isNA = true,  sourcePrefabName = "NA Highway Edge Line", cloneName = "TownRoadLane NA Auto Yellow Left Line", fallbackMesh = "Yellow Solid Line Mesh", yellowLeft = true },
+            new() { isNA = true,  sourcePrefabName = "NA Highway Edge Line", cloneName = "AEM NA Yellow Left Line", fallbackMesh = "Yellow Solid Line Mesh", yellowLeft = true },
         };
 
         private PrefabSystem _prefabSystem;

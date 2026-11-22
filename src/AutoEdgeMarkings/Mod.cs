@@ -4,14 +4,14 @@ using Game;
 using Game.Modding;
 using Game.Net;
 using Game.SceneFlow;
-using TownRoadLane.Localization;
-using TownRoadLane.Systems.Emission;
-using TownRoadLane.Systems.Prefabs;
+using AutoEdgeMarkings.Localization;
+using AutoEdgeMarkings.Systems.Emission;
+using AutoEdgeMarkings.Systems.Prefabs;
 #if DEBUG
-using TownRoadLane.Diagnostics;
+using AutoEdgeMarkings.Diagnostics;
 #endif
 
-namespace TownRoadLane
+namespace AutoEdgeMarkings
 {
     /// <summary>
     /// Entry point. Registers the prefab clone systems that add automatic markings (curb-side
@@ -24,7 +24,7 @@ namespace TownRoadLane
 
         private static ILog CreateLog()
         {
-            var logger = LogManager.GetLogger($"{nameof(TownRoadLane)}.{nameof(Mod)}").SetShowsErrorsInUI(false);
+            var logger = LogManager.GetLogger($"{nameof(AutoEdgeMarkings)}.{nameof(Mod)}").SetShowsErrorsInUI(false);
             // By default UnityLogger reopens and closes the file on every write. When an open
             // fails (antivirus or cloud sync holding the file), Open() swallows the error, the
             // writer stays null and the write throws a NullReferenceException outside its
@@ -34,7 +34,7 @@ namespace TownRoadLane
             return logger;
         }
 
-        public static TownRoadLaneSetting Settings { get; private set; }
+        public static AutoEdgeMarkingsSetting Settings { get; private set; }
 
         public void OnLoad(UpdateSystem updateSystem)
         {
@@ -46,12 +46,12 @@ namespace TownRoadLane
             // The defaults instance must be created before the live one: every ModSetting ctor
             // registers itself in the static ModSetting.instances[id] map, and the game resolves
             // the id to whichever instance was constructed last.
-            var settingDefaults = new TownRoadLaneSetting(this);
-            Settings = new TownRoadLaneSetting(this);
+            var settingDefaults = new AutoEdgeMarkingsSetting(this);
+            Settings = new AutoEdgeMarkingsSetting(this);
             Settings.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(Settings));
             GameManager.instance.localizationManager.AddSource("ru-RU", new LocaleRU(Settings));
-            AssetDatabase.global.LoadSettings(nameof(TownRoadLane), Settings, settingDefaults);
+            AssetDatabase.global.LoadSettings(nameof(AutoEdgeMarkings), Settings, settingDefaults);
             // A decode failure silently falls back to SetDefaults(), so log what the load actually
             // produced; user reports then show the real state.
             log.Info($"settings loaded: edge={Settings.EdgeLineEnabled}/{Settings.EdgeLineStyle}, yellowLeft={Settings.YellowLeftLineEnabled}, parking={Settings.ParkingMarkingsEnabled}/{Settings.ParkingLineStyle}/{Settings.ParkingEndStyle}");

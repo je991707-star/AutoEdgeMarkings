@@ -1,13 +1,13 @@
 ﻿<Publish>
 	<!--Id must be set in order to update existed mod. it is not required for publishing mod for the first time-->
-	<!--No ModId: this is an independent release; the upstream mod's id (150863) belongs to its original author. Add the new id here after the first publish.-->
+	<!--No ModId yet: add the id Paradox Mods assigns after the first publish.-->
 	<!--Name of the mod to display to players-->
-	<DisplayName Value="Town Road Lane — Road Markings" />
+	<DisplayName Value="Auto Edge Markings" />
 	<!--Short description of the mod-->
 	<ShortDescription Value="Automatic curb-side edge lines, US yellow left lines and parallel parking markings for town roads" />
 	<!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
 	<LongDescription>
-# Town Road Lane — Road Markings
+# Auto Edge Markings
 
 Automatic lane markings for ordinary town roads — **zero external asset dependencies** and **compatible with Road Builder**.
 
@@ -29,9 +29,12 @@ The mod adds its marking prefabs to vanilla lanes and leaves the game's own mark
 ## Requirements
 None — completely standalone.
 
+## Credits
+Based on Town Road Lane by mxerf (GPL-3.0); this mod keeps only its automatic markings.
+
 ---
 
-# Town Road Lane — дорожная разметка
+# Auto Edge Markings — автоматическая разметка
 
 Автоматическая разметка обычных городских дорог — **без внешних зависимостей** и **совместимо с Road Builder**.
 
@@ -52,8 +55,12 @@ None — completely standalone.
 
 ## Зависимости
 Нет — мод полностью автономен.
+
+## Благодарности
+Основано на Town Road Lane от mxerf (GPL-3.0); в этом моде оставлена только автоматическая разметка.
 	</LongDescription>
 	<!--Thumbnail-->
+	<!--TODO before publishing: replace the thumbnail and screenshots; most current images show the removed marking editor.-->
 	<Thumbnail Value="Properties/Thumbnail.jpg" />
 	<!--Screenshot, can be set multiple times-->
 	<!-- Screenshot filenames carry a content hash: the PDX CDN caches by name, so re-publishing
@@ -69,9 +76,9 @@ None — completely standalone.
 	<!--Tag, can be set multiple times-->
 	<Tag Value="Code Mod" />
 	<!--Link to the forum post where the mod can be discussed-->
-	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/town-road-lane-road-markings-draw-your-own-lines-area-fills-on-any-intersection.1935028/" />
+	<ForumLink Value="" />
 	<!--Version of the mod-->
-	<ModVersion Value="3.0.0" />
+	<ModVersion Value="1.0.0" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.6.*" />
 	<!--Zero external dependencies: built-in line textures are generated procedurally in memory.-->
@@ -79,34 +86,16 @@ None — completely standalone.
 	<RequiredDLC Value="" />
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-# 3.0.0 — Automatic markings only
+# 1.0.0 — Initial release
 
-Removed:
-- The intersection marking editor (drawn lines, segments, area fills, "Hide vanilla markings", in-game panel and hotkeys). Saves that used the editor are not supported.
-
-Changed:
-- When a new city is started from a map, the map's existing roads are rebuilt so they get the automatic edge and parking markings.
-- Crisp parking dashed styles use the short dense dash instead of the lane-divider dash.
-
-Fixed:
-- Native crash when building the first road (clone prefabs are now registered before PrefabInitializeSystem).
-- Built-in line meshes failing to load ("Template material was not found") or to render ("Error when initializing batch").
-- "Duplicate prefab ID" warnings from cloned prefabs.
-
-# 2.6.0 — Standalone (zero EAI/G87 dependencies) &amp; Road Builder compatibility
-
-Changed:
-- Completely standalone: removed all ExtraAssetsImporter (EAI) and G87 external asset pack dependencies (97828, 98624, 99062). All high-contrast line styles, curb, junction box, hatching stripes, bike/bus lanes, and asphalt fills are now generated procedurally in memory with single-pass rendering.
-- Full Road Builder compatibility: restored the game's vanilla SecondaryLaneSystem (replaced the 2,000-line decompiled copy with a lightweight MarkingSuppressionSystem), aligned prefab cloning after PrefabInitializeSystem using single-shot AddPrefab without UpdatePrefab rebuilds, and hardened topology extraction against custom/non-lane Road Builder edges.
-- Existing saves and settings remain 100% compatible.
-
-Fixed:
-- Eliminated crashes on load and during live road edits when running alongside Road Builder.
-- Prevented repeated per-frame warning logs when prefabs are still initializing.
-- Made settings persistence single-flight to avoid concurrent file write races.
+- Automatic curb-side edge line for city roads with 3 m lanes.
+- US-style yellow left edge line in North American-theme cities.
+- Parallel parking lines and end ticks.
+- Vanilla and built-in crisp line styles for each feature.
+- The map's existing roads get the markings when a new city is started.
 	</ChangeLog>
 	<!--External link, can be set multiple times. supported types are "discord", "github", "youtube", "twitch", "x", "paypal", "patreon", "buymeacoffee", "kofi", "crowdin", "gitlab", "gofundme"-->
-	<ExternalLink Type="github" Url="https://github.com/mxerf/town-road-lane" />
+	<ExternalLink Type="github" Url="" />
 	<!--Supported values Public, Private, Unlisted-->
 	<AccessLevel Value="Public" />
 </Publish>

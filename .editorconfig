@@ -70,9 +70,3 @@ dotnet_naming_style.underscore_camel.capitalization = camel_case
 dotnet_naming_rule.private_instance_fields_underscore.symbols = private_instance_fields
 dotnet_naming_rule.private_instance_fields_underscore.style = underscore_camel
 dotnet_naming_rule.private_instance_fields_underscore.severity = suggestion
-
-# Copy of the decompiled vanilla SecondaryLaneSystem: kept as close to the decompiler output
-# as possible so game patches can be diffed against it. Formatters leave it alone.
-[src/TownRoadLane/Systems/Emission/CustomSecondaryLaneSystem.cs]
-generated_code = true
-indent_style = tab
