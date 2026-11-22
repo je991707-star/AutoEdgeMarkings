@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Colossal.IO.AssetDatabase;
 using Colossal.Logging;
 using Game.Prefabs;
@@ -37,7 +38,8 @@ namespace AutoEdgeMarkings.Systems.Prefabs
         // Retain asset wrappers for the process lifetime so neither GC nor weak caches drop them.
         private static readonly List<SurfaceAsset> s_PinnedSurfaces = new List<SurfaceAsset>();
         private static readonly List<TextureAsset> s_PinnedTextures = new List<TextureAsset>();
-        private static readonly HashSet<string> s_Failed = new HashSet<string>();
+        // Null until the first EnsureCustomLineMeshes call; then the meshes that built successfully.
+        private static Dictionary<string, RenderPrefab> s_Built;
 
         private const string kAssetSubPath = "AutoEdgeMarkings";
         private static ILocalAssetDatabase s_Database;
@@ -69,12 +71,12 @@ namespace AutoEdgeMarkings.Systems.Prefabs
 
         private static readonly MeshSpec[] kSpecs =
         {
-            new() { name = kCrispWhiteSolid,  sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kCrispWhiteSolid, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f) },
-            new() { name = kCrispWhiteDashed, sourceVanillaMesh = kVanillaDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kCrispWhiteDashed, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f, dashFraction: 0.54f) },
-            new() { name = kCrispYellowSolid, sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kCrispYellowSolid, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.78f) },
-            new() { name = kBlueSolid,        sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kBlueSolid, ProceduralTextureFactory.kPaintBlue, widthFraction: 0.72f) },
-            new() { name = kWhiteTerminal,    sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kWhiteTerminal, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.88f) },
-            new() { name = kYellowTerminal,   sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kYellowTerminal, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.88f) },
+            new() { name = kCrispWhiteSolid,  sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kCrispWhiteSolid, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f) },
+            new() { name = kCrispWhiteDashed, sourceVanillaMesh = kVanillaDashedSource, buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kCrispWhiteDashed, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f, dashFraction: 0.54f) },
+            new() { name = kCrispYellowSolid, sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kCrispYellowSolid, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.78f) },
+            new() { name = kBlueSolid,        sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kBlueSolid, ProceduralTextureFactory.kPaintBlue, widthFraction: 0.72f) },
+            new() { name = kWhiteTerminal,    sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kWhiteTerminal, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.88f) },
+            new() { name = kYellowTerminal,   sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kYellowTerminal, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.88f) },
             // Parking dashes keep the vanilla dense albedo: its short dash pattern is in the texture,
             // so a procedural one-dash-per-tile texture turns it back into lane-divider dashes.
             new() { name = kCrispWhiteParkingDashed,  sourceVanillaMesh = kVanillaDenseDashedSource },
@@ -91,70 +93,44 @@ namespace AutoEdgeMarkings.Systems.Prefabs
         };
 
         /// <summary>
-        /// Ensures every built-in custom <see cref="RenderPrefab"/> is registered with
-        /// <paramref name="prefabSystem"/> and inserted into <paramref name="meshByName"/>.
-        /// Idempotent and safe to call from both <see cref="EdgeLineCloneSystem"/> and
-        /// <see cref="ParkingLineCloneSystem"/>.
+        /// Builds and registers every built-in <see cref="RenderPrefab"/> on the first call (from
+        /// whichever clone system runs first) and adds them to <paramref name="meshByName"/>, which
+        /// must already hold <see cref="RequiredVanillaSources"/>. A mesh that fails to build is
+        /// left out, so callers fall back to their vanilla mesh.
         /// </summary>
         public static void EnsureCustomLineMeshes(PrefabSystem prefabSystem, Dictionary<string, RenderPrefab> meshByName)
         {
-            int created = 0;
-            for (int i = 0; i < kSpecs.Length; i++)
+            if (s_Built == null)
             {
-                var spec = kSpecs[i];
-                if (meshByName.ContainsKey(spec.name)) continue;
-                // Both clone systems call this; a spec that already failed must not retry and re-log.
-                if (s_Failed.Contains(spec.name)) continue;
-
-                if (prefabSystem.TryGetPrefab(new PrefabID(nameof(RenderPrefab), spec.name), out var existingBase)
-                    && existingBase is RenderPrefab existingMesh)
+                s_Built = new Dictionary<string, RenderPrefab>();
+                foreach (var spec in kSpecs)
                 {
-                    meshByName[spec.name] = existingMesh;
-                    continue;
-                }
-
-                if (!meshByName.TryGetValue(spec.sourceVanillaMesh, out var srcMesh) || srcMesh == null)
-                {
-                    log.Warn($"CustomLineMeshFactory: vanilla source '{spec.sourceVanillaMesh}' missing — skipping '{spec.name}'");
-                    continue;
-                }
-
-                try
-                {
-                    var customMesh = CreateCustomMesh(srcMesh, spec);
-                    if (customMesh != null)
+                    try
                     {
+                        var customMesh = CreateCustomMesh(meshByName[spec.sourceVanillaMesh], spec);
                         prefabSystem.AddPrefab(customMesh);
-                        meshByName[spec.name] = customMesh;
-                        created++;
+                        s_Built[spec.name] = customMesh;
+                    }
+                    catch (Exception e)
+                    {
+                        log.Warn($"CustomLineMeshFactory: failed to build '{spec.name}' ({e.GetType().Name}: {e.Message}) — callers will fall back to vanilla mesh");
                     }
                 }
-                catch (Exception e)
-                {
-                    s_Failed.Add(spec.name);
-                    log.Warn($"CustomLineMeshFactory: failed to build '{spec.name}' ({e.GetType().Name}: {e.Message}) — callers will fall back to vanilla mesh");
-                }
+                log.Info($"CustomLineMeshFactory: registered {s_Built.Count}/{kSpecs.Length} built-in line RenderPrefab(s)");
             }
 
-            if (created > 0)
-                log.Info($"CustomLineMeshFactory: registered {created} built-in line/curb RenderPrefab(s)");
+            foreach (var kv in s_Built)
+                meshByName[kv.Key] = kv.Value;
         }
 
         private static RenderPrefab CreateCustomMesh(RenderPrefab srcMesh, MeshSpec spec)
         {
-            SurfaceAsset srcSurface = FirstSurfaceAsset(srcMesh);
-            if (srcSurface == null)
-            {
-                log.Warn($"CustomLineMeshFactory: '{srcMesh.name}' has no SurfaceAsset — skipping '{spec.name}'");
-                return null;
-            }
+            SurfaceAsset srcSurface = srcMesh.surfaceAssets?.FirstOrDefault(s => s != null)
+                ?? throw new InvalidOperationException($"'{srcMesh.name}' has no SurfaceAsset");
 
-            Material srcMat = srcSurface.Load(0, loadTextures: true, TextureAsset.KeepOnCPU.Dont, useVT: false);
-            if (srcMat == null)
-            {
-                log.Warn($"CustomLineMeshFactory: failed to load material from '{srcMesh.name}' — skipping '{spec.name}'");
-                return null;
-            }
+            // Loads the vanilla surface's data so CopyFrom below has something to copy.
+            if (srcSurface.Load(0, loadTextures: true, TextureAsset.KeepOnCPU.Dont, useVT: false) == null)
+                throw new InvalidOperationException($"failed to load material from '{srcMesh.name}'");
 
             // RenderPrefab stores surfaces as AssetReference ids that ManagedBatchSystem resolves
             // through AssetDatabase.global, so both assets must live in a registered database;
@@ -183,20 +159,10 @@ namespace AutoEdgeMarkings.Systems.Prefabs
             surfaceAsset.Load(0, loadTextures: true, TextureAsset.KeepOnCPU.Object, useVT: false);
             s_PinnedSurfaces.Add(surfaceAsset);
 
-            var clone = srcMesh.Clone(spec.name) as RenderPrefab;
-            if (clone == null) return null;
-
+            var clone = (RenderPrefab)srcMesh.Clone(spec.name);
             clone.surfaceAssets = new[] { surfaceAsset };
             clone.manualVTRequired = false;
             return clone;
-        }
-
-        private static SurfaceAsset FirstSurfaceAsset(RenderPrefab mesh)
-        {
-            if (mesh.surfaceAssets == null) return null;
-            foreach (var s in mesh.surfaceAssets)
-                if (s != null) return s;
-            return null;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace AutoEdgeMarkings.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingMarkingsEnabled)), "Mark parallel parking zones" },
                 { _setting.GetOptionDescLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingMarkingsEnabled)),
-                    "Draws a line along parallel street-parking zones with a cross tick at each end of the block. Roads without a Parking Lane 2 sublane (oneway 3-lane, asymmetric variants) remain unmarked — same coverage as v1.1. Changes take effect after the game is restarted." },
+                    "Draws a line along parallel street-parking zones with a cross tick at each end of the block. Roads without a Parking Lane 2 sublane (oneway 3-lane, asymmetric variants) remain unmarked. Changes take effect after the game is restarted." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingLineStyle)), "Parking line style" },
                 { _setting.GetOptionDescLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingLineStyle)),

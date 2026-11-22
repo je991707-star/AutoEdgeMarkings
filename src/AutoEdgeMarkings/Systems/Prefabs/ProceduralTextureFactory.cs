@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -6,60 +5,36 @@ namespace AutoEdgeMarkings.Systems.Prefabs
 {
     /// <summary>
     /// Generates self-contained, tileable procedural <see cref="Texture2D"/> line textures for the
-    /// built-in edge-line and parking styles, so the mod has no external asset dependency. All
-    /// created textures are retained for the process lifetime so Unity's GC never reclaims them
-    /// while referenced by runtime materials.
+    /// built-in edge-line and parking styles, so the mod has no external asset dependency.
     /// </summary>
     internal static class ProceduralTextureFactory
     {
-        private static readonly List<Object> s_Pinned = new List<Object>();
 
         // Road-paint palette tuned to match CS2's daylight/HDRP exposure without blowing out.
         public static readonly Color32 kPaintWhite = new Color32(236, 238, 240, 255);
         public static readonly Color32 kPaintYellow = new Color32(232, 186, 46, 255);
         public static readonly Color32 kPaintBlue = new Color32(58, 128, 214, 255);
 
-        /// <summary>Longitudinal solid road-marking decal texture (U = lateral across lane width,
-        /// V = longitudinal along curve).</summary>
-        public static Texture2D CreateSolidLineTexture(string name, Color32 color, float widthFraction = 0.72f, int size = 256)
+        /// <summary>Longitudinal road-marking decal texture (U = lateral across lane width,
+        /// V = longitudinal along curve). <paramref name="dashFraction"/> null = solid line;
+        /// otherwise one anti-aliased dash covering that fraction of each tile.</summary>
+        public static Texture2D CreateLineTexture(string name, Color32 color, float widthFraction, float? dashFraction = null)
         {
+            const int size = 256;
             var pixels = new Color32[size * size];
             float halfW = widthFraction * 0.5f;
-            const float aa = 0.03f;
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float u = (x + 0.5f) / size;
-                    float du = math.abs(u - 0.5f);
-                    float cov = 1f - Smoothstep(halfW - aa, halfW + aa, du);
-                    if (cov <= 0.001f)
-                    {
-                        pixels[y * size + x] = new Color32(color.r, color.g, color.b, 0);
-                        continue;
-                    }
-                    float grain = 0.94f + 0.10f * ValueNoise(x, y, 29);
-                    pixels[y * size + x] = ScaleColor(color, grain, cov * 0.97f);
-                }
-            }
-            return BuildTexture(name, size, size, pixels);
-        }
-
-        /// <summary>Longitudinal dashed road-marking decal texture with anti-aliased dash ends.</summary>
-        public static Texture2D CreateDashedLineTexture(string name, Color32 color, float widthFraction = 0.72f, float dashFraction = 0.52f, int size = 256)
-        {
-            var pixels = new Color32[size * size];
-            float halfW = widthFraction * 0.5f;
-            float halfD = dashFraction * 0.5f;
             const float aaU = 0.03f;
             const float aaV = 0.015f;
+            int seed = dashFraction == null ? 29 : 43;
 
             for (int y = 0; y < size; y++)
             {
-                float v = (y + 0.5f) / size;
-                float dv = math.abs(v - 0.5f);
-                float covV = 1f - Smoothstep(halfD - aaV, halfD + aaV, dv);
+                float covV = 1f;
+                if (dashFraction is float dash)
+                {
+                    float dv = math.abs((y + 0.5f) / size - 0.5f);
+                    covV = 1f - Smoothstep(dash * 0.5f - aaV, dash * 0.5f + aaV, dv);
+                }
                 for (int x = 0; x < size; x++)
                 {
                     float u = (x + 0.5f) / size;
@@ -71,16 +46,13 @@ namespace AutoEdgeMarkings.Systems.Prefabs
                         pixels[y * size + x] = new Color32(color.r, color.g, color.b, 0);
                         continue;
                     }
-                    float grain = 0.94f + 0.10f * ValueNoise(x, y, 43);
+                    float grain = 0.94f + 0.10f * ValueNoise(x, y, seed);
                     pixels[y * size + x] = ScaleColor(color, grain, cov * 0.97f);
                 }
             }
-            return BuildTexture(name, size, size, pixels);
-        }
 
-        private static Texture2D BuildTexture(string name, int width, int height, Color32[] pixels)
-        {
-            var tex = new Texture2D(width, height, TextureFormat.RGBA32, mipChain: true, linear: false)
+            // HideAndDontSave includes DontUnloadUnusedAsset, so Unity never unloads it.
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, mipChain: true, linear: false)
             {
                 name = name,
                 wrapMode = TextureWrapMode.Repeat,
@@ -90,7 +62,6 @@ namespace AutoEdgeMarkings.Systems.Prefabs
             };
             tex.SetPixels32(pixels);
             tex.Apply(updateMipmaps: true, makeNoLongerReadable: false);
-            s_Pinned.Add(tex);
             return tex;
         }
 

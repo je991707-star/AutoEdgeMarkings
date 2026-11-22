@@ -89,11 +89,8 @@ namespace AutoEdgeMarkings
         public void OnDispose()
         {
             log.Info(nameof(OnDispose));
-            if (Settings != null)
-            {
-                Settings.UnregisterInOptionsUI();
-                Settings = null;
-            }
+            Settings?.UnregisterInOptionsUI();
+            Settings = null;
         }
     }
 }

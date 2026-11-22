@@ -32,7 +32,7 @@ namespace AutoEdgeMarkings.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingMarkingsEnabled)), "Размечать зоны параллельной парковки" },
                 { _setting.GetOptionDescLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingMarkingsEnabled)),
-                    "Рисует линию вдоль зон параллельной уличной парковки с поперечной чертой на концах квартала. Дороги без сублейна Parking Lane 2 (односторонние трёхполосные, асимметричные варианты) остаются без разметки — то же покрытие, что и в v1.1. Изменения вступают в силу после перезапуска игры." },
+                    "Рисует линию вдоль зон параллельной уличной парковки с поперечной чертой на концах квартала. Дороги без сублейна Parking Lane 2 (односторонние трёхполосные, асимметричные варианты) остаются без разметки. Изменения вступают в силу после перезапуска игры." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingLineStyle)), "Стиль линии парковки" },
                 { _setting.GetOptionDescLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingLineStyle)),
