@@ -9,13 +9,13 @@ using Unity.Entities;
 namespace TownRoadLane.Systems.Emission
 {
     /// <summary>
-    /// Marks every road edge and node Updated once after a load, so vanilla
-    /// <see cref="SecondaryLaneSystem"/> rebuilds their markings with the clone prefabs and the
-    /// current settings.
+    /// Marks every road edge and node Updated once when a new game starts from a map, so vanilla
+    /// <see cref="SecondaryLaneSystem"/> rebuilds the map's built-in roads with the clone prefabs.
     ///
-    /// Markings are saved with the map/save. SecondaryLaneSystem only processes Updated or Deleted
-    /// owners, so without this, roads that existed before the mod (or before a setting change)
-    /// keep their old markings, e.g. no auto edge line, until something reconnects them.
+    /// Markings are saved with the map. SecondaryLaneSystem only processes Updated or Deleted
+    /// owners, so without this the map's roads keep their vanilla-only markings (e.g. no auto edge
+    /// line) until something reconnects them. Saved games already contain the rebuilt markings,
+    /// so loading a save does not refresh.
     /// </summary>
     public partial class VanillaLaneRefreshSystem : GameSystemBase
     {
@@ -45,7 +45,7 @@ namespace TownRoadLane.Systems.Emission
         protected override void OnGameLoadingComplete(Purpose purpose, GameMode mode)
         {
             base.OnGameLoadingComplete(purpose, mode);
-            _pending = mode.IsGameOrEditor();
+            _pending = purpose == Purpose.NewGame;
         }
 
         protected override void OnUpdate()
@@ -55,7 +55,7 @@ namespace TownRoadLane.Systems.Emission
             int count = _ownerQuery.CalculateEntityCount();
             if (count == 0) return;
             EntityManager.AddComponent<Updated>(_ownerQuery);
-            log.Info($"lane-refresh: marked {count} road edge(s)/node(s) Updated after load so vanilla markings rebuild with current prefabs/settings");
+            log.Info($"lane-refresh: new game — marked {count} map road edge(s)/node(s) Updated so vanilla markings rebuild with the clone prefabs");
         }
     }
 }
