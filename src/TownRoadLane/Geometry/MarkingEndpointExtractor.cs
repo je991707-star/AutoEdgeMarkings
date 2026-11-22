@@ -168,7 +168,7 @@ namespace TownRoadLane.Geometry
             if (!em.HasComponent<Edge>(edge)) return false;
             if (!em.HasComponent<Composition>(edge)) return false;
             var comp = em.GetComponentData<Composition>(edge);
-            if (comp.m_Edge == Entity.Null || !em.HasBuffer<NetCompositionLane>(comp.m_Edge)) return false;
+            if (comp.m_Edge == Entity.Null || !em.Exists(comp.m_Edge) || !em.HasBuffer<NetCompositionLane>(comp.m_Edge)) return false;
             if (!em.HasComponent<EdgeGeometry>(edge)) return false;
             // A zeroed EdgeGeometry (before Modification4 on the load frame) has both caps
             // collapsed to the origin. Real roads always have width > 0.
@@ -178,15 +178,27 @@ namespace TownRoadLane.Geometry
             return true;
         }
 
-        /// <summary>True when the edge still exists as a road (not demolished) but
-        /// <see cref="IsEdgeExtractionReady"/> is false, the transient state during save loading.
-        /// Callers should retry next frame instead of recomputing.</summary>
+        /// <summary>True when the edge still exists as a geometry-bearing road (not demolished)
+        /// and is in the transient post-load state where <c>Composition.m_Edge</c> or
+        /// <c>EdgeGeometry</c> is still zeroed. Non-road/custom Road Builder edges that have valid
+        /// geometry/composition without <c>NetCompositionLane</c> return false so they never block
+        /// a junction indefinitely.</summary>
         public static bool IsEdgeAliveButUnready(EntityManager em, Entity edge)
         {
             if (edge == Entity.Null || !em.Exists(edge)) return false;
             if (em.HasComponent<Deleted>(edge)) return false;
             if (!em.HasComponent<Edge>(edge)) return false;
-            return !IsEdgeExtractionReady(em, edge);
+            if (!em.HasComponent<Composition>(edge) || !em.HasComponent<EdgeGeometry>(edge)) return false;
+
+            var comp = em.GetComponentData<Composition>(edge);
+            if (comp.m_Edge == Entity.Null || !em.Exists(comp.m_Edge)) return true;
+
+            var geom = em.GetComponentData<EdgeGeometry>(edge);
+            if (math.lengthsq(geom.m_Start.m_Right.a - geom.m_Start.m_Left.a) < 1e-6f
+                && math.lengthsq(geom.m_End.m_Right.d - geom.m_End.m_Left.d) < 1e-6f)
+                return true;
+
+            return false;
         }
 
         // Two kerb points of different edges closer than this merge into one corner. 3 m covers
@@ -230,6 +242,7 @@ namespace TownRoadLane.Geometry
             for (int i = 0; i < connected.Length; i++)
             {
                 var edgeEntity = connected[i].m_Edge;
+                if (edgeEntity == Entity.Null || !em.Exists(edgeEntity) || em.HasComponent<Deleted>(edgeEntity)) continue;
                 if (!em.HasComponent<Edge>(edgeEntity)) continue;
                 if (!em.HasComponent<EdgeGeometry>(edgeEntity)) continue;
 
@@ -251,6 +264,7 @@ namespace TownRoadLane.Geometry
                     leftPt = geom.m_End.m_Left.d;
                     rightPt = geom.m_End.m_Right.d;
                 }
+                if (math.lengthsq(rightPt - leftPt) < 1e-6f) continue;
                 kerbList.Add((edgeEntity, leftPt));
                 kerbList.Add((edgeEntity, rightPt));
             }
@@ -327,6 +341,7 @@ namespace TownRoadLane.Geometry
 
         private static void ExtractForEdge(EntityManager em, Entity node, Entity edgeEntity, List<MarkingEndpoint> outList, bool log)
         {
+            if (edgeEntity == Entity.Null || !em.Exists(edgeEntity) || em.HasComponent<Deleted>(edgeEntity)) return;
             if (!em.HasComponent<Edge>(edgeEntity)) return;
             if (!em.HasComponent<Composition>(edgeEntity)) return;
             if (!em.HasComponent<EdgeGeometry>(edgeEntity)) return;
@@ -341,12 +356,13 @@ namespace TownRoadLane.Geometry
             // the cap compositions (height and shoulder data) and have no lanes; vanilla traffic
             // code (GenerateConnectorsSystem) reads lanes from m_Edge too.
             Entity compEntity = composition.m_Edge;
-            if (compEntity == Entity.Null) return;
+            if (compEntity == Entity.Null || !em.Exists(compEntity)) return;
             if (!em.HasBuffer<NetCompositionLane>(compEntity)) { if (log) Mod.log.Debug($"  edge #{edgeEntity.Index}: composition #{compEntity.Index} has no NetCompositionLane buffer"); return; }
             if (!em.HasComponent<NetCompositionData>(compEntity)) { if (log) Mod.log.Debug($"  edge #{edgeEntity.Index}: composition #{compEntity.Index} has no NetCompositionData"); return; }
 
             var compLanes = em.GetBuffer<NetCompositionLane>(compEntity, isReadOnly: true);
             var compData = em.GetComponentData<NetCompositionData>(compEntity);
+            if (compData.m_Width <= 0.01f) return;
             float halfWidth = compData.m_Width * 0.5f;
 
             var edgeGeom = em.GetComponentData<EdgeGeometry>(edgeEntity);
@@ -366,6 +382,7 @@ namespace TownRoadLane.Geometry
             // placed along it by lateral fraction.
             float3 leftAtNode = nodeIsStart ? capLeftCurve.a : capLeftCurve.d;
             float3 rightAtNode = nodeIsStart ? capRightCurve.a : capRightCurve.d;
+            if (math.lengthsq(rightAtNode - leftAtNode) < 1e-6f) return;
             // Tangent into the edge, away from the node; curves drawn from the dot are oriented
             // by it. Start-cap curves run a→d into the edge, end-cap curves the other way.
             float3 tangentSrc = nodeIsStart
@@ -378,6 +395,7 @@ namespace TownRoadLane.Geometry
             for (int i = 0; i < compLanes.Length; i++)
             {
                 var cl = compLanes[i];
+                if (cl.m_Lane == Entity.Null || !em.Exists(cl.m_Lane)) continue;
                 if (log)
                 {
                     float w = em.HasComponent<NetLaneData>(cl.m_Lane) ? em.GetComponentData<NetLaneData>(cl.m_Lane).m_Width : 0f;

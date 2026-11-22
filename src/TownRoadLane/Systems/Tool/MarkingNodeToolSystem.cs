@@ -200,8 +200,19 @@ namespace TownRoadLane.Systems.Tool
 
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
+            if (_selectedNode != Entity.Null
+                && (!EntityManager.Exists(_selectedNode) || EntityManager.HasComponent<Deleted>(_selectedNode)))
+            {
+                ResetSelection();
+            }
+
             bool hitSomething = GetRaycastResult(out Entity hitEntity, out RaycastHit hit);
-            bool hitNode = hitSomething && EntityManager.HasComponent<Node>(hitEntity);
+            bool hitNode = hitSomething
+                && hitEntity != Entity.Null
+                && EntityManager.Exists(hitEntity)
+                && !EntityManager.HasComponent<Deleted>(hitEntity)
+                && !EntityManager.HasComponent<Temp>(hitEntity)
+                && EntityManager.HasComponent<Node>(hitEntity);
             _cursorWorldPos = hitSomething ? hit.m_HitPosition : float3.zero;
             _hoveredNode = hitNode ? hitEntity : Entity.Null;
             _hoverIdx = (_state != MarkingToolState.Default && _state != MarkingToolState.AreaSelecting && hitSomething) ? FindHoveredEndpoint(_cursorWorldPos) : -1;

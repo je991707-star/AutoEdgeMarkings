@@ -41,6 +41,8 @@ namespace TownRoadLane.Systems.Topology
         private EntityQuery _nodesWithoutState;
         // A node waited for its edges on the last scan (see RecomputeIfChanged), so scan again.
         private bool _retryPending;
+        private readonly Dictionary<Entity, int> _deferredTicks = new Dictionary<Entity, int>();
+        private const int kMaxDeferTicks = 180;
 
         // Defaults of the four split-filter thresholds, which are user settings. They are read on
         // every node rebuild, so a change reaches a junction when its lines are next edited, and
@@ -95,6 +97,13 @@ namespace TownRoadLane.Systems.Topology
             RequireForUpdate(_nodesWithLines);
         }
 
+        protected override void OnGameLoaded(Colossal.Serialization.Entities.Context serializationContext)
+        {
+            base.OnGameLoaded(serializationContext);
+            _deferredTicks.Clear();
+            _retryPending = false;
+        }
+
         protected override void OnUpdate()
         {
             // Change filters work per chunk and include writes by other systems since this one
@@ -112,6 +121,14 @@ namespace TownRoadLane.Systems.Topology
                     case RebuildResult.Rebuilt: rewritten++; break;
                     case RebuildResult.Deferred: _retryPending = true; break;
                 }
+            }
+            if (_deferredTicks.Count > 0)
+            {
+                var alive = new HashSet<Entity>(nodes);
+                var gone = new List<Entity>();
+                foreach (var n in _deferredTicks.Keys)
+                    if (!alive.Contains(n)) gone.Add(n);
+                for (int i = 0; i < gone.Count; i++) _deferredTicks.Remove(gone[i]);
             }
             if (rewritten > 0) log.Debug($"MarkingTopologySystem: recomputed segments on {rewritten} node(s)");
         }
@@ -177,12 +194,22 @@ namespace TownRoadLane.Systems.Topology
                 if (MarkingEndpointExtractor.IsEdgeAliveButUnready(EntityManager, linesSnapshot[i].sourceEdge)
                     || MarkingEndpointExtractor.IsEdgeAliveButUnready(EntityManager, linesSnapshot[i].targetEdge))
                 {
-                    linesSnapshot.Dispose();
-                    beziers.Dispose();
-                    bezierValid.Dispose();
-                    return RebuildResult.Deferred;
+                    _deferredTicks.TryGetValue(node, out var ticks);
+                    if (ticks < kMaxDeferTicks)
+                    {
+                        _deferredTicks[node] = ticks + 1;
+                        linesSnapshot.Dispose();
+                        beziers.Dispose();
+                        bezierValid.Dispose();
+                        return RebuildResult.Deferred;
+                    }
+                    // Budget exhausted (e.g. a non-standard Road Builder edge): proceed and keep
+                    // cached segments for the unbuildable line without spinning every frame.
+                    log.Warn($"topology node#{node.Index}: line {i} edge still unready after {kMaxDeferTicks} ticks — proceeding with cached segments");
+                    break;
                 }
             }
+            _deferredTicks.Remove(node);
 
             // Split parameters per line, starting with the ends 0 and 1.
             var boundaries = new List<List<float>>(lineCount);

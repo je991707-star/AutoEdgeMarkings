@@ -125,14 +125,16 @@ namespace TownRoadLane.Systems.Prefabs
         private EntityQuery _lanePrefabQuery;
         private EntityQuery _meshPrefabQuery;
         private bool _done;
+        private int _waitTicks;
+        private bool _waitWarned;
+        private const int kWaitWarnTicks = 300;
 
-        // Tool-style clones per (style, isNA). The PrefabBase survives UpdatePrefab but the entity
-        // behind it is recreated, so entities are always resolved through GetCloneEntity.
+        // Tool-style clones per (style, isNA). Registered once via AddPrefab; entities are
+        // resolved through PrefabSystem so lookups stay valid across world reloads.
         private readonly Dictionary<(MarkingStyle, bool), NetLanePrefab> _clonesByStyle = new();
 
         /// <summary>Current entity of the clone for this style and theme, or Entity.Null while it
-        /// is not loaded (callers fall back to Solid). Resolved through PrefabSystem on every call
-        /// because UpdatePrefab recreates the entity.</summary>
+        /// is not loaded (callers fall back to Solid).</summary>
         public Entity GetCloneEntity(MarkingStyle style, bool isNA)
         {
             if (_prefabSystem == null) return Entity.Null;
@@ -150,29 +152,38 @@ namespace TownRoadLane.Systems.Prefabs
             RequireForUpdate(_lanePrefabQuery);
         }
 
-        // There is deliberately no way to re-run this mid-session. UpdatePrefab in a live world,
-        // in any phase, leaves existing sublanes with stale PrefabRefs, and the next secondary lane
-        // rebuild (any road edit, even a bulldozer hover) crashes natively in a Burst job. The
-        // system runs once per save load, before lanes are spawned.
-
+        // Clones are configured in memory and registered once via PrefabSystem.AddPrefab (never
+        // UpdatePrefab on a live world). Runs until all required vanilla sources are present, then
+        // disables itself for the rest of the process.
         protected override void OnUpdate()
         {
             if (_done) return;
-            _done = true;
-            Enabled = false;
-            // Runs even when EdgeLineEnabled is off: saved games reference the clones by name (the
-            // tool's sublanes are spawned from them) and MarkingSegmentEmissionSystem needs the
-            // Solid clone every tick. Without them a save loads with "Unknown prefab ID" errors
-            // and the emission ECB crashes natively. The setting only controls hosting on city
-            // lanes, which ApplyOrUpdate handles.
-            try { ApplyOrUpdate(); }
-            catch (Exception e) { log.Error(e, "EdgeLineCloneSystem failed"); }
+            try
+            {
+                if (ApplyOrUpdate())
+                {
+                    _done = true;
+                    Enabled = false;
+                }
+                else if (++_waitTicks >= kWaitWarnTicks && !_waitWarned)
+                {
+                    _waitWarned = true;
+                    log.Warn($"EdgeLineCloneSystem: still waiting for vanilla host lanes/sources after {kWaitWarnTicks} PrefabUpdate ticks");
+                }
+            }
+            catch (Exception e)
+            {
+                _done = true;
+                Enabled = false;
+                log.Error(e, "EdgeLineCloneSystem failed");
+            }
         }
 
         /// <summary>
-        /// Creates or refreshes every clone in <see cref="kStyleRecipes"/>. Idempotent.
+        /// Creates (or caches already-registered) clones in <see cref="kStyleRecipes"/>.
+        /// Returns false if required vanilla sources have not finished initializing yet.
         /// </summary>
-        public void ApplyOrUpdate()
+        public bool ApplyOrUpdate()
         {
             // The mesh setting applies only to the hosted auto edge clones; tool styles always use
             // their recipe mesh.
@@ -186,119 +197,122 @@ namespace TownRoadLane.Systems.Prefabs
             var laneByName = LaneCloning.FindLanes(_prefabSystem, _lanePrefabQuery, wantedLanes);
 
             var cityLanes = LaneCloning.ResolveLanes(laneByName, kCityLaneNames, "city host lane");
-            if (cityLanes.Count == 0) { log.Warn("no city host lanes found — aborting"); return; }
+            if (cityLanes.Count == 0) return false;
 
-            // Yellow left line on highways. Vanilla 'NA Highway Edge Line' hosts the highway lanes
-            // in m_LeftLanes with canFlipSides=true, so it draws white on both edges. While the
-            // option is on, its mirroring is switched off (white stays on the curb side) and its
-            // host entries are copied to the yellow clone's m_RightLanes, so highways get the
-            // yellow median edge with the lanes and flags vanilla uses. The EU prefab is untouched.
-            //
-            // The vanilla prefab must not go through UpdatePrefab: re-initializing it makes
-            // NetInitializeSystem add its m_LeftLanes entries to the host lanes' SecondaryNetLane
-            // buffers again (vanilla dedupes only the right side), and the duplicate sublanes with
-            // identical PathNode keys crash natively in the Modification4B barrier playback.
-            // Instead the CanFlipSides bit is cleared in the already-built host buffer entries. The
-            // managed flag is cleared too, so a prefab that is not initialized yet ends up the same.
-            SecondaryLaneInfo[] highwayYellowInfos = Array.Empty<SecondaryLaneInfo>();
-            if (yellowLeftOn
-                && laneByName.TryGetValue("NA Highway Edge Line", out var naVanillaEdge) && naVanillaEdge != null
-                && naVanillaEdge.TryGet<SecondaryLane>(out var naVanillaSec) && naVanillaSec.m_LeftLanes != null)
+            // Wait until core vanilla marking sources are loaded so we never lock in a partial set.
+            foreach (var r in kStyleRecipes)
             {
-                highwayYellowInfos = (SecondaryLaneInfo[])naVanillaSec.m_LeftLanes.Clone();
-                naVanillaSec.m_CanFlipSides = false;
-                Entity naEdgeEnt = _prefabSystem.GetEntity(naVanillaEdge);
-                int stripped = 0;
-                foreach (var info in highwayYellowInfos)
-                {
-                    if (info.m_Lane == null) continue;
-                    Entity hostEnt = _prefabSystem.GetEntity(info.m_Lane);
-                    if (hostEnt == Entity.Null || !EntityManager.HasBuffer<SecondaryNetLane>(hostEnt)) continue;
-                    var hostBuf = EntityManager.GetBuffer<SecondaryNetLane>(hostEnt);
-                    for (int i = 0; i < hostBuf.Length; i++)
-                    {
-                        var entry = hostBuf[i];
-                        if (entry.m_Lane != naEdgeEnt) continue;
-                        if ((entry.m_Flags & SecondaryNetLaneFlags.CanFlipSides) == 0) continue;
-                        entry.m_Flags &= ~SecondaryNetLaneFlags.CanFlipSides;
-                        hostBuf[i] = entry;
-                        stripped++;
-                    }
-                }
-                log.Info($"yellow-left: unmirrored vanilla 'NA Highway Edge Line' — CanFlipSides stripped from {stripped} host entries, {highwayYellowInfos.Length} entries mirrored to the yellow clone");
+                if (!laneByName.ContainsKey(r.sourcePrefabName) && !laneByName.ContainsKey(r.cloneName))
+                    return false;
             }
 
             // Resolve every mesh that might be needed in one query pass.
             var meshNames = new HashSet<string> { edgeMeshName };
             foreach (var r in kStyleRecipes) meshNames.Add(r.fallbackMesh);
             var meshByName = LaneCloning.ResolveMeshes(_prefabSystem, _meshPrefabQuery, meshNames);
+            if (!meshByName.ContainsKey("White Solid Line Mesh")) return false;
 
-            int touched = 0;
+            // Yellow left line on highways. Vanilla 'NA Highway Edge Line' hosts the highway lanes
+            // in m_LeftLanes with canFlipSides=true, so it draws white on both edges. While the
+            // option is on, its mirroring is switched off (white stays on the curb side) and its
+            // host entries are copied (deduplicated) to the yellow clone's m_RightLanes, so
+            // highways get the yellow median edge with the lanes and flags vanilla uses. The EU
+            // prefab is untouched.
+            //
+            // The vanilla prefab never goes through UpdatePrefab: only the CanFlipSides bit is
+            // cleared in the already-built host buffer entries, preventing duplicate SecondaryNetLane
+            // entries that would crash in Modification4B barrier playback.
+            SecondaryLaneInfo[] highwayYellowInfos = Array.Empty<SecondaryLaneInfo>();
+            if (yellowLeftOn
+                && laneByName.TryGetValue("NA Highway Edge Line", out var naVanillaEdge) && naVanillaEdge != null
+                && naVanillaEdge.TryGet<SecondaryLane>(out var naVanillaSec) && naVanillaSec.m_LeftLanes != null)
+            {
+                highwayYellowInfos = LaneCloning.DeduplicateLaneInfos(naVanillaSec.m_LeftLanes);
+                naVanillaSec.m_CanFlipSides = false;
+                Entity naEdgeEnt = _prefabSystem.GetEntity(naVanillaEdge);
+                int stripped = 0;
+                if (naEdgeEnt != Entity.Null)
+                {
+                    foreach (var info in highwayYellowInfos)
+                    {
+                        if (info.m_Lane == null) continue;
+                        Entity hostEnt = _prefabSystem.GetEntity(info.m_Lane);
+                        if (hostEnt == Entity.Null || !EntityManager.Exists(hostEnt) || !EntityManager.HasBuffer<SecondaryNetLane>(hostEnt)) continue;
+                        var hostBuf = EntityManager.GetBuffer<SecondaryNetLane>(hostEnt);
+                        for (int i = 0; i < hostBuf.Length; i++)
+                        {
+                            var entry = hostBuf[i];
+                            if (entry.m_Lane != naEdgeEnt) continue;
+                            if ((entry.m_Flags & SecondaryNetLaneFlags.CanFlipSides) == 0) continue;
+                            entry.m_Flags &= ~SecondaryNetLaneFlags.CanFlipSides;
+                            hostBuf[i] = entry;
+                            stripped++;
+                        }
+                    }
+                }
+                log.Info($"yellow-left: unmirrored vanilla 'NA Highway Edge Line' — CanFlipSides stripped from {stripped} host entries, {highwayYellowInfos.Length} entries mirrored to the yellow clone");
+            }
+
+            int created = 0;
+            int reused = 0;
             foreach (var recipe in kStyleRecipes)
             {
-                string wantedMesh = recipe.hostOnCityLanes ? edgeMeshName : recipe.fallbackMesh;
-                RenderPrefab mesh = LaneCloning.PickMesh(meshByName, wantedMesh, recipe.fallbackMesh, recipe.cloneName);
-
-                if (!LaneCloning.TryGetOrDuplicate(_prefabSystem, laneByName, recipe.sourcePrefabName, recipe.cloneName, out var cloneBase, out var sec))
+                if (!LaneCloning.TryPrepareClone(_prefabSystem, laneByName, recipe.sourcePrefabName, recipe.cloneName, out var cloneBase, out var sec, out bool isNew))
                     continue;
 
-                // Clear all hosting first: DuplicatePrefab copies the source's hosting, so a cloned
-                // vanilla divider would otherwise be drawn wherever the original is.
-                sec.m_LeftLanes = Array.Empty<SecondaryLaneInfo>();
-                sec.m_RightLanes = Array.Empty<SecondaryLaneInfo>();
-                sec.m_CrossingLanes = Array.Empty<SecondaryLaneInfo2>();
-                sec.m_CanFlipSides = false;
+                if (isNew)
+                {
+                    string wantedMesh = recipe.hostOnCityLanes ? edgeMeshName : recipe.fallbackMesh;
+                    RenderPrefab mesh = LaneCloning.PickMesh(meshByName, wantedMesh, recipe.fallbackMesh, recipe.cloneName);
 
-                int hostCount = 0;
-                if (recipe.hostOnCityLanes && autoEdgeOn)
-                {
-                    // Sides: m_LeftLanes lists the host lanes lying to the left of the line, so the
-                    // line renders on the lane's right edge, and vice versa. (Vanilla Car Bay Line
-                    // has the drive lane in left and the bay lane in right, the line between them.)
-                    // With EdgeLineEnabled off the clone still exists but hosts nothing.
-                    if (yellowLeftOn && recipe.isNA)
-                    {
-                        // The NA white line keeps only the curb (right) side; the median (left)
-                        // side belongs to the yellow left clone.
-                        sec.m_LeftLanes = MakeCityLaneInfos(cityLanes);
-                        sec.m_CanFlipSides = false;
-                    }
-                    else
-                    {
-                        sec.m_LeftLanes = MakeCityLaneInfos(cityLanes);
-                        sec.m_CanFlipSides = true;
-                    }
-                    hostCount = cityLanes.Count * 2;
-                }
-                else if (recipe.hostYellowLeft && yellowLeftOn)
-                {
-                    // Hosted in m_RightLanes, so the line renders on the lane's left (median) edge.
-                    // City lanes plus the highway entries copied from the vanilla NA edge line.
-                    var yellowInfos = MakeCityLaneInfos(cityLanes);
-                    if (highwayYellowInfos.Length > 0)
-                    {
-                        var combined = new SecondaryLaneInfo[yellowInfos.Length + highwayYellowInfos.Length];
-                        yellowInfos.CopyTo(combined, 0);
-                        highwayYellowInfos.CopyTo(combined, yellowInfos.Length);
-                        yellowInfos = combined;
-                    }
-                    sec.m_RightLanes = yellowInfos;
+                    // Clear all hosting BEFORE AddPrefab: Clone() copies the source's hosting, so
+                    // clearing it prior to registration ensures NetInitializeSystem never indexes
+                    // unwanted vanilla hostings onto the clone.
+                    sec.m_LeftLanes = Array.Empty<SecondaryLaneInfo>();
+                    sec.m_RightLanes = Array.Empty<SecondaryLaneInfo>();
+                    sec.m_CrossingLanes = Array.Empty<SecondaryLaneInfo2>();
                     sec.m_CanFlipSides = false;
-                    hostCount = yellowInfos.Length;
-                }
-                // Tool-style clones host nothing, so the vanilla secondary lane pass never draws them.
 
-                int swapped = LaneCloning.SwapMesh(cloneBase, mesh);
-                _prefabSystem.UpdatePrefab(cloneBase);
+                    int hostCount = 0;
+                    if (recipe.hostOnCityLanes && autoEdgeOn)
+                    {
+                        // Sides: m_LeftLanes lists the host lanes lying to the left of the line, so
+                        // the line renders on the lane's right edge, and vice versa.
+                        sec.m_LeftLanes = MakeCityLaneInfos(cityLanes);
+                        sec.m_CanFlipSides = !(yellowLeftOn && recipe.isNA);
+                        hostCount = sec.m_LeftLanes.Length;
+                    }
+                    else if (recipe.hostYellowLeft && yellowLeftOn)
+                    {
+                        // Hosted in m_RightLanes, so the line renders on the lane's left (median)
+                        // edge. City lanes plus the deduplicated highway entries copied from the
+                        // vanilla NA edge line.
+                        var combined = new List<SecondaryLaneInfo>(cityLanes.Count * 2 + highwayYellowInfos.Length);
+                        combined.AddRange(MakeCityLaneInfos(cityLanes));
+                        combined.AddRange(highwayYellowInfos);
+                        sec.m_RightLanes = LaneCloning.DeduplicateLaneInfos(combined);
+                        sec.m_CanFlipSides = false;
+                        hostCount = sec.m_RightLanes.Length;
+                    }
+                    // Tool-style clones host nothing, so vanilla SecondaryLaneSystem never draws them.
+
+                    int swapped = LaneCloning.SwapMesh(cloneBase, mesh);
+                    _prefabSystem.AddPrefab(cloneBase);
+                    created++;
+                    log.Debug($"registered '{recipe.cloneName}' [{recipe.style}/{(recipe.isNA ? "NA" : "EU")}]: hostedEntries={hostCount} mesh='{(mesh != null ? mesh.name : "<source>")}' swapped={swapped}");
+                }
+                else
+                {
+                    reused++;
+                }
 
                 // Hosted clones are not tool styles and would collide with the tool's entry under
                 // the same (style, isNA) key.
                 if (!recipe.hostOnCityLanes && !recipe.hostYellowLeft) _clonesByStyle[(recipe.style, recipe.isNA)] = cloneBase;
-                touched++;
-                log.Debug($"applied '{recipe.cloneName}' [{recipe.style}/{(recipe.isNA ? "NA" : "EU")}]: hostedEntries={hostCount} mesh='{(mesh != null ? mesh.name : "<source>")}' swapped={swapped}");
             }
 
-            log.Info($"EdgeLineCloneSystem: applied {touched} prefab(s)");
+            log.Info($"EdgeLineCloneSystem: registered {created} new prefab(s), reused {reused}");
+            return true;
         }
 
         /// <summary>

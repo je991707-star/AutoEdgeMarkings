@@ -43,8 +43,10 @@ namespace TownRoadLane.Systems.Topology
         private EntityQuery[] _changeWatchers;
 
         // Ticks each node has been waiting for its edges to become ready (see RecomputeIfChanged).
+        // Capped at kMaxDeferTicks so a non-standard/broken Road Builder edge cannot starve a
+        // node's area fills or spin CPU forever.
         private readonly Dictionary<Entity, int> _deferredTicks = new Dictionary<Entity, int>();
-        private const int kDeferredWarnTicks = 600;
+        private const int kMaxDeferTicks = 180;
 
         protected override void OnCreate()
         {
@@ -159,13 +161,17 @@ namespace TownRoadLane.Systems.Topology
                 {
                     if (MarkingEndpointExtractor.IsEdgeAliveButUnready(EntityManager, connected[i].m_Edge))
                     {
-                        // Some edges never become ready (certain Road Builder or custom nets).
-                        // The area then never gets a fill, so warn once instead of staying silent.
                         _deferredTicks.TryGetValue(node, out var ticks);
-                        _deferredTicks[node] = ticks + 1;
-                        if (ticks + 1 == kDeferredWarnTicks)
-                            log.Warn($"area-topology node#{node.Index}: deferred {kDeferredWarnTicks} ticks — connected edge #{connected[i].m_Edge.Index} never extraction-ready, area pieces are not being built");
-                        return false;
+                        if (ticks < kMaxDeferTicks)
+                        {
+                            _deferredTicks[node] = ticks + 1;
+                            return false;
+                        }
+                        // Budget exhausted (e.g. a non-standard Road Builder edge with zeroed
+                        // geometry): warn once and proceed using the remaining ready edges so
+                        // valid areas on this node still rebuild.
+                        log.Warn($"area-topology node#{node.Index}: connected edge #{connected[i].m_Edge.Index} still unready after {kMaxDeferTicks} ticks — proceeding with ready edges");
+                        break;
                     }
                 }
             }

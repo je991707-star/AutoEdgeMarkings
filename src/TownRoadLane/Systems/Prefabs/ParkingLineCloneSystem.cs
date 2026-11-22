@@ -58,6 +58,9 @@ namespace TownRoadLane.Systems.Prefabs
         private EntityQuery _lanePrefabQuery;
         private EntityQuery _meshPrefabQuery;
         private bool _done;
+        private int _waitTicks;
+        private bool _waitWarned;
+        private const int kWaitWarnTicks = 300;
 
         protected override void OnCreate()
         {
@@ -68,25 +71,38 @@ namespace TownRoadLane.Systems.Prefabs
             RequireForUpdate(_lanePrefabQuery);
         }
 
-        // Runs once per save load, with no mid-session re-run on purpose (see EdgeLineCloneSystem).
-
+        // Clones are configured in memory and registered once via PrefabSystem.AddPrefab (never
+        // UpdatePrefab on a live world). Runs until all required vanilla sources are present, then
+        // disables itself for the rest of the process.
         protected override void OnUpdate()
         {
             if (_done) return;
-            _done = true;
-            Enabled = false;
-            // Runs even when ParkingMarkingsEnabled is off: saved games reference the spawned
-            // sublanes' prefabs by name, and missing clones mean "Unknown prefab ID" errors and
-            // stale entities. The setting only controls hosting, which ApplyOrUpdate handles.
-            try { ApplyOrUpdate(); }
-            catch (Exception e) { log.Error(e, "ParkingLineCloneSystem failed"); }
+            try
+            {
+                if (ApplyOrUpdate())
+                {
+                    _done = true;
+                    Enabled = false;
+                }
+                else if (++_waitTicks >= kWaitWarnTicks && !_waitWarned)
+                {
+                    _waitWarned = true;
+                    log.Warn($"ParkingLineCloneSystem: still waiting for vanilla parking/host lanes after {kWaitWarnTicks} PrefabUpdate ticks");
+                }
+            }
+            catch (Exception e)
+            {
+                _done = true;
+                Enabled = false;
+                log.Error(e, "ParkingLineCloneSystem failed");
+            }
         }
 
         /// <summary>
-        /// Creates the parking-marking prefabs, or refreshes their mesh and hosting to match the current
-        /// settings. Idempotent.
+        /// Creates the parking-marking prefabs once via <see cref="PrefabSystem.AddPrefab"/>.
+        /// Returns false if required vanilla sources are not initialized yet.
         /// </summary>
-        public void ApplyOrUpdate()
+        public bool ApplyOrUpdate()
         {
             string lineMeshName = Mod.Settings?.ParkingLineMeshName() ?? kFallbackLineMesh;
             string endMeshName = Mod.Settings != null ? Mod.Settings.ParkingEndMeshName() : kFallbackEndMesh;
@@ -100,19 +116,35 @@ namespace TownRoadLane.Systems.Prefabs
 
             var carriageway = LaneCloning.ResolveLanes(laneByName, kCarriagewayLaneNames, "carriageway host lane");
             if (!laneByName.TryGetValue(kParkingLaneName, out var parkingLane) || parkingLane == null)
-            { log.Warn($"parallel parking lane '{kParkingLaneName}' not found — aborting"); return; }
-            if (carriageway.Count == 0) { log.Warn("no carriageway host lanes found — aborting"); return; }
+                return false;
+            if (carriageway.Count == 0) return false;
+
+            foreach (var r in kRecipes)
+            {
+                if (!laneByName.ContainsKey(r.src) && !laneByName.ContainsKey(r.clone))
+                    return false;
+            }
 
             var meshByName = LaneCloning.ResolveMeshes(_prefabSystem, _meshPrefabQuery, new[] { lineMeshName, endMeshName, kFallbackLineMesh, kFallbackEndMesh });
+            if (!meshByName.ContainsKey(kFallbackLineMesh) || !meshByName.ContainsKey(kFallbackEndMesh))
+                return false;
+
             RenderPrefab lineMesh = LaneCloning.PickMesh(meshByName, lineMeshName, kFallbackLineMesh, "longitudinal line");
             RenderPrefab endMesh = wantEnds ? LaneCloning.PickMesh(meshByName, endMeshName, kFallbackEndMesh, "end tick") : null;
 
-            int touched = 0;
+            int created = 0;
+            int reused = 0;
             foreach (var (srcName, cloneName, role) in kRecipes)
             {
                 // Created unconditionally; the settings only decide whether hosting is attached.
-                if (!LaneCloning.TryGetOrDuplicate(_prefabSystem, laneByName, srcName, cloneName, out var cloneBase, out var sec))
+                if (!LaneCloning.TryPrepareClone(_prefabSystem, laneByName, srcName, cloneName, out var cloneBase, out var sec, out bool isNew))
                     continue;
+
+                if (!isNew)
+                {
+                    reused++;
+                    continue;
+                }
 
                 RenderPrefab mesh;
                 if (role == Role.Longitudinal)
@@ -137,12 +169,13 @@ namespace TownRoadLane.Systems.Prefabs
                 }
 
                 int swapped = LaneCloning.SwapMesh(cloneBase, mesh);
-                _prefabSystem.UpdatePrefab(cloneBase);
-                touched++;
-                log.Debug($"applied '{cloneName}' ({role}): mesh='{(mesh != null ? mesh.name : "<source>")}' swapped={swapped}");
+                _prefabSystem.AddPrefab(cloneBase);
+                created++;
+                log.Debug($"registered '{cloneName}' ({role}): mesh='{(mesh != null ? mesh.name : "<source>")}' swapped={swapped}");
             }
 
-            log.Info($"ParkingLineCloneSystem: applied {touched} prefab(s) (enabled={parkingOn}, line='{lineMeshName}', end='{endMeshName ?? "(none)"}')");
+            log.Info($"ParkingLineCloneSystem: registered {created} new prefab(s), reused {reused} (enabled={parkingOn}, line='{lineMeshName}', end='{endMeshName ?? "(none)"}')");
+            return true;
         }
 
         private static SecondaryLaneInfo[] MakeInfos(IReadOnlyList<NetLanePrefab> lanes)

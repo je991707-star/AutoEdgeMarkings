@@ -8,8 +8,9 @@ namespace TownRoadLane.Systems.Prefabs
 {
     /// <summary>
     /// Prefab lookups and clone steps shared by <see cref="EdgeLineCloneSystem"/> and
-    /// <see cref="ParkingLineCloneSystem"/>: find vanilla lane and mesh prefabs by name, duplicate
-    /// a SecondaryLane marking, and swap its mesh.
+    /// <see cref="ParkingLineCloneSystem"/>: find vanilla lane and mesh prefabs by name, clone
+    /// a SecondaryLane marking in memory before registering it once via <see cref="PrefabSystem.AddPrefab"/>,
+    /// and swap its mesh on an isolated array copy.
     /// </summary>
     internal static class LaneCloning
     {
@@ -63,42 +64,111 @@ namespace TownRoadLane.Systems.Prefabs
         {
             if (!string.IsNullOrEmpty(wanted) && byName.TryGetValue(wanted, out var rp) && rp != null) return rp;
             if (byName.TryGetValue(fallback, out var fb) && fb != null)
-            { log.Warn($"{what} mesh '{wanted}' not found (G87 not installed?) — falling back to '{fallback}'"); return fb; }
+            { log.Warn($"{what} mesh '{wanted}' not found — falling back to '{fallback}'"); return fb; }
             log.Warn($"{what} mesh '{wanted}' and fallback '{fallback}' both missing — keeping source mesh");
             return null;
         }
 
         /// <summary>
-        /// The existing clone named <paramref name="cloneName"/>, or a new duplicate of
-        /// <paramref name="sourceName"/> (added to <paramref name="laneByName"/>), with its
-        /// SecondaryLane. The source must be a NetLaneGeometryPrefab with SecondaryLane. Logs and
-        /// returns false when neither is usable.
+        /// Returns an already-registered clone named <paramref name="cloneName"/> (<paramref name="isNew"/>
+        /// = false), or creates an unregistered in-memory clone via <see cref="PrefabBase.Clone"/>
+        /// (<paramref name="isNew"/> = true) so the caller can configure its <see cref="SecondaryLane"/>
+        /// and meshes BEFORE registering it once with <see cref="PrefabSystem.AddPrefab"/>.
+        ///
+        /// Avoids <see cref="PrefabSystem.DuplicatePrefab"/> + <see cref="PrefabSystem.UpdatePrefab"/>,
+        /// which registers the source's original hosting first and then forces a re-init that can
+        /// produce duplicate <see cref="SecondaryNetLane"/> entries and native crashes when combined
+        /// with Road Builder's dynamic prefab updates.
         /// </summary>
-        public static bool TryGetOrDuplicate(
+        public static bool TryPrepareClone(
             PrefabSystem prefabSystem, Dictionary<string, NetLanePrefab> laneByName, string sourceName, string cloneName,
-            out NetLanePrefab clone, out SecondaryLane secondaryLane)
+            out NetLanePrefab clone, out SecondaryLane secondaryLane, out bool isNew)
         {
             secondaryLane = null;
-            if (!laneByName.TryGetValue(cloneName, out clone) || clone == null)
+            isNew = false;
+
+            if (laneByName.TryGetValue(cloneName, out clone) && clone != null)
             {
-                if (!laneByName.TryGetValue(sourceName, out var src) || !(src is NetLaneGeometryPrefab) || !src.TryGet<SecondaryLane>(out _))
-                { log.Warn($"source '{sourceName}' missing/invalid — can't create '{cloneName}'"); return false; }
-                clone = prefabSystem.DuplicatePrefab(src, cloneName) as NetLanePrefab;
-                laneByName[cloneName] = clone;
+                if (!clone.TryGet(out secondaryLane)) { log.Warn($"'{cloneName}' has no SecondaryLane — skipping"); return false; }
+                return true;
             }
-            if (clone == null || !clone.TryGet(out secondaryLane)) { log.Warn($"'{cloneName}' has no SecondaryLane — skipping"); return false; }
+
+            if (prefabSystem.TryGetPrefab(new PrefabID(nameof(NetLaneGeometryPrefab), cloneName), out var existingBase)
+                && existingBase is NetLanePrefab existingLane)
+            {
+                clone = existingLane;
+                laneByName[cloneName] = clone;
+                if (!clone.TryGet(out secondaryLane)) { log.Warn($"'{cloneName}' has no SecondaryLane — skipping"); return false; }
+                return true;
+            }
+
+            if (!laneByName.TryGetValue(sourceName, out var src) || src is not NetLaneGeometryPrefab || !src.TryGet<SecondaryLane>(out _))
+            {
+                log.Warn($"source '{sourceName}' missing/invalid — can't create '{cloneName}'");
+                clone = null;
+                return false;
+            }
+
+            clone = src.Clone(cloneName) as NetLanePrefab;
+            if (clone == null || !clone.TryGet(out secondaryLane))
+            {
+                log.Warn($"cloned '{cloneName}' has no SecondaryLane — skipping");
+                clone = null;
+                return false;
+            }
+
+            laneByName[cloneName] = clone;
+            isNew = true;
             return true;
         }
 
-        /// <summary>Puts <paramref name="mesh"/> into every mesh slot of the prefab; returns how
-        /// many slots changed. A null mesh leaves the prefab untouched.</summary>
+        /// <summary>Copies the prefab's mesh array (so the source prefab's array is never mutated)
+        /// and puts <paramref name="mesh"/> into every populated mesh slot; returns how many slots
+        /// changed. A null mesh still isolates the array copy without changing its entries.</summary>
         public static int SwapMesh(NetLanePrefab prefab, RenderPrefab mesh)
         {
-            if (mesh == null || !(prefab is NetLaneGeometryPrefab g) || g.m_Meshes == null) return 0;
+            if (prefab is not NetLaneGeometryPrefab g || g.m_Meshes == null) return 0;
+            var copy = new NetLaneMeshInfo[g.m_Meshes.Length];
             int n = 0;
             for (int m = 0; m < g.m_Meshes.Length; m++)
-                if (g.m_Meshes[m].m_Mesh != null) { g.m_Meshes[m].m_Mesh = mesh; n++; }
+            {
+                copy[m] = g.m_Meshes[m];
+                if (mesh != null && copy[m].m_Mesh != null)
+                {
+                    copy[m].m_Mesh = mesh;
+                    n++;
+                }
+            }
+            g.m_Meshes = copy;
             return n;
+        }
+
+        /// <summary>Drops null lane entries and duplicate (lane, flag-mask) entries from a
+        /// SecondaryLaneInfo list so NetInitializeSystem never receives duplicate hostings.</summary>
+        public static SecondaryLaneInfo[] DeduplicateLaneInfos(IReadOnlyList<SecondaryLaneInfo> infos)
+        {
+            if (infos == null || infos.Count == 0) return System.Array.Empty<SecondaryLaneInfo>();
+            var list = new List<SecondaryLaneInfo>(infos.Count);
+            var seen = new HashSet<(NetLanePrefab, int)>();
+            for (int i = 0; i < infos.Count; i++)
+            {
+                var info = infos[i];
+                if (info == null || info.m_Lane == null) continue;
+                int mask = (info.m_RequireSafe ? 1 << 0 : 0)
+                         | (info.m_RequireUnsafe ? 1 << 1 : 0)
+                         | (info.m_RequireSingle ? 1 << 2 : 0)
+                         | (info.m_RequireMultiple ? 1 << 3 : 0)
+                         | (info.m_RequireAllowPassing ? 1 << 4 : 0)
+                         | (info.m_RequireForbidPassing ? 1 << 5 : 0)
+                         | (info.m_RequireMerge ? 1 << 6 : 0)
+                         | (info.m_RequireContinue ? 1 << 7 : 0)
+                         | (info.m_RequireSafeMaster ? 1 << 8 : 0)
+                         | (info.m_RequireRoundabout ? 1 << 9 : 0)
+                         | (info.m_RequireNotRoundabout ? 1 << 10 : 0);
+                if (!seen.Add((info.m_Lane, mask))) continue;
+                list.Add(info);
+            }
+            return list.ToArray();
         }
     }
 }

@@ -164,6 +164,7 @@ namespace TownRoadLane.Systems.Emission
                         var (node, lineIndex, segIdx, pass) = entry.Key;
                         if (!curvesByNode.TryGetValue(node, out var curves))
                             curvesByNode[node] = curves = BuildLineCurves(node);
+                        if (lineIndex < 0 || lineIndex >= curves.Length) continue;
                         if (!(curves[lineIndex] is Bezier4x3 curve))
                         {
                             if (UnityEngine.Time.realtimeSinceStartup < _retryAnyUntil || IsWaitingForRoad(node, lineIndex))
