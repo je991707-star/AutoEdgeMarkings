@@ -27,7 +27,7 @@ namespace TownRoadLane.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.EdgeLineStyle)), "Edge line style" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.EdgeLineStyle)),
-                    "The mesh style used for the automatic curb-side edge line only — lines drawn with the marking tool keep their own styles. \"G87\" options require the [G87] Road Markings mod; if it isn't installed they fall back to vanilla. Changes take effect after the game is restarted." },
+                    "The mesh style used for the automatic curb-side edge line only — lines drawn with the marking tool keep their own styles. All crisp and vanilla styles are built in with no external dependencies. Changes take effect after the game is restarted." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.YellowLeftLineEnabled)), "Yellow left edge line (US)" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.YellowLeftLineEnabled)),
@@ -39,11 +39,11 @@ namespace TownRoadLane.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.ParkingLineStyle)), "Parking line style" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.ParkingLineStyle)),
-                    "The longitudinal line drawn along the parking zone. \"G87\" options require the [G87] Road Markings mod. Changes take effect after the game is restarted." },
+                    "The longitudinal line drawn along the parking zone. All styles are built in. Changes take effect after the game is restarted." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.ParkingEndStyle)), "Parking end-tick style" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.ParkingEndStyle)),
-                    "The short perpendicular tick at the start and end of a parking block. \"None\" disables the ticks. \"G87\" options require the [G87] Road Markings mod. Changes take effect after the game is restarted." },
+                    "The short perpendicular tick at the start and end of a parking block. \"None\" disables the ticks. All styles are built in. Changes take effect after the game is restarted." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.SegmentMinLengthM)), "Minimum segment length (m)" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.SegmentMinLengthM)),
@@ -79,34 +79,34 @@ namespace TownRoadLane.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.CycleAreaStyleBinding)), "Cycle area style (hotkey)" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.CycleAreaStyleBinding)),
-                    "While the marking tool is active, cycles the fill style for the NEXT area you close (Solid → Junction Box → White Stripes → Yellow Stripes → Green Bike → Red Bus → back). Default U. G87 styles fall back to Solid when G87 isn't installed." },
+                    "While the marking tool is active, cycles the fill style for the NEXT area you close (Concrete → Junction Box → White Stripes → Yellow Stripes → Green Bike → Red Bus → Asphalt → Grass/Sand/Pavement/Tiles). Default U." },
 
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolid), "White solid" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolidThick), "White solid (thick)" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteDashed), "White dashed" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.YellowSolid), "Yellow solid" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolid_G87), "White solid (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteDashed_G87), "White dashed (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.YellowSolid_G87), "Yellow solid (G87)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolid_G87), "White solid (crisp)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteDashed_G87), "White dashed (crisp)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.YellowSolid_G87), "Yellow solid (crisp)" },
 
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteDashedDense), "White dashed (dense)" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteDashed), "White dashed" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteSolid), "White solid" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowDashed), "Yellow dashed" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowSolid), "Yellow solid" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteSolid_G87), "White solid (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteDashed_G87), "White dashed (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowSolid_G87), "Yellow solid (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowDashed_G87), "Yellow dashed (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.BlueSolid_G87), "Blue solid (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.BlueDashed_G87), "Blue dashed (G87)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteSolid_G87), "White solid (crisp)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteDashed_G87), "White dashed (crisp)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowSolid_G87), "Yellow solid (crisp)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowDashed_G87), "Yellow dashed (crisp)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.BlueSolid_G87), "Blue solid" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.BlueDashed_G87), "Blue dashed" },
 
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.None), "None" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.WhiteSolid), "White solid" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.WhiteSolidThick), "White solid (thick)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.WhiteTerminal_G87), "White terminal line (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.YellowTerminal_G87), "Yellow terminal line (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.BlueSolid_G87), "Blue solid (G87)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.WhiteTerminal_G87), "White terminal line" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.YellowTerminal_G87), "Yellow terminal line" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.BlueSolid_G87), "Blue solid" },
             };
         }
 

@@ -35,7 +35,7 @@ import {
 import { registerSegmentAnchor, setAnchorExpanded, segKey, areaKey } from "../hooks/positionRegistry";
 import { useConfirm, useKeyedConfirm, Confirm } from "../hooks/useConfirm";
 import { ChevronRight, Cross, Eye, EyeOff, Trash, Cycle } from "../components/icons";
-import { LineStylePreview, AreaStylePreview, isG87LineStyle } from "../components/stylePreviews";
+import { LineStylePreview, AreaStylePreview } from "../components/stylePreviews";
 import { Dropdown, DropdownOption } from "../components/Dropdown";
 import { TooltipProvider, Tooltip } from "../components/Tooltip";
 import { useT } from "../i18n";
@@ -70,7 +70,6 @@ import {
   LineChevron,
   LineTitle,
   SwatchWrap,
-  G87Mark,
   LineSegCount,
   LineBody,
   StyleRow,
@@ -124,18 +123,18 @@ const PanelErrorFallback = ({ error, onRetry }: { error: Error; onRetry: () => v
 const STYLE_VALUES = [0, 1, 5, 8, 4, 10, 11, 13, 12, 2, 3, 6, 7, 9] as const;
 type StyleValue = typeof STYLE_VALUES[number];
 
-// STYLE_VALUES groups related looks for the dropdown (vanilla white, vanilla yellow, G87,
-// curb). The enum values themselves only ever get appended, so their numeric order means
-// nothing for display.
+// STYLE_VALUES groups related looks for the dropdown (vanilla white, vanilla yellow,
+// built-in crisp white/yellow, curb). The enum values themselves only ever get appended,
+// so their numeric order means nothing for display.
 const STYLE_KEYS: Record<number, StringKey> = {
   0: "style.solid",
   1: "style.dashed",
-  2: "style.g87Solid",
-  3: "style.g87Dashed",
+  2: "style.crispSolid",
+  3: "style.crispDashed",
   4: "style.doubleSolid",
   5: "style.dashedDense",
-  6: "style.g87Yellow",
-  7: "style.g87YellowDashed",
+  6: "style.crispYellow",
+  7: "style.crispYellowDashed",
   8: "style.dashedLong",
   9: "style.curb",
   10: "style.yellowSolid",
@@ -779,7 +778,6 @@ const LineRow = ({
         <Tooltip content={styleLabel(t, line.style)}>
           <SwatchWrap>
             <LineStylePreview style={line.style} width={28} height={8} />
-            {isG87LineStyle(line.style) && <G87Mark>G87</G87Mark>}
           </SwatchWrap>
         </Tooltip>
         <LineSegCount>

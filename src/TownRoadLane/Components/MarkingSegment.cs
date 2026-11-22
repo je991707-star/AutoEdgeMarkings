@@ -1,5 +1,6 @@
 using Colossal.Serialization.Entities;
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace TownRoadLane.Components
 {
@@ -42,9 +43,20 @@ namespace TownRoadLane.Components
         public void Deserialize<TReader>(TReader reader) where TReader : IReader
         {
             reader.Read(out int version);
+            if (version < 1)
+            {
+                lineIndex = -1;
+                tStart = 0f;
+                tEnd = 1f;
+                visible = false;
+                style = 0;
+                return;
+            }
             reader.Read(out lineIndex);
             reader.Read(out tStart);
             reader.Read(out tEnd);
+            if (!math.isfinite(tStart)) tStart = 0f;
+            if (!math.isfinite(tEnd)) tEnd = 1f;
             reader.Read(out visible);
             // Version 1 has no style field: those segments were drawn Solid (0).
             if (version >= 2) reader.Read(out style); else style = 0;

@@ -15,15 +15,17 @@ const YELLOW = "#f2c94c";
 const BIKE_GREEN = "#4aa054";
 const BUS_RED = "#b04a38";
 
-// MarkingStyle values: 0 Solid, 1 Dashed, 2 G87 Solid, 3 G87 Dashed, 4 Double Solid,
-// 5 Dashed short, 6 G87 Yellow, 7 G87 Yellow Dashed, 8 Dashed long, 9 Curb, 10-13 vanilla
-// yellow (solid, dashed, double, solid+dashed). G87 variants draw the same preview as the
-// vanilla ones; callers add a "G87" text mark next to it.
-export const isG87LineStyle = (style: number): boolean =>
+// MarkingStyle values: 0 Solid, 1 Dashed, 2 Crisp Solid, 3 Crisp Dashed, 4 Double Solid,
+// 5 Dashed short, 6 Crisp Yellow, 7 Crisp Yellow Dashed, 8 Dashed long, 9 Curb, 10-13 vanilla
+// yellow (solid, dashed, double, solid+dashed). Built-in crisp variants render slightly
+// brighter and bolder in the preview swatch to distinguish them from the softer vanilla lines.
+const isCrispLineStyle = (style: number): boolean =>
   style === 2 || style === 3 || style === 6 || style === 7;
 
 // Slightly brighter than YELLOW, so a 2px line still reads as yellow on the dark panel.
 const PAINT_YELLOW = "#f5d05e";
+const PAINT_CRISP = "#ffffff";
+const PAINT_CRISP_YELLOW = "#ffdf4d";
 
 export const LineStylePreview = ({
   style,
@@ -34,14 +36,19 @@ export const LineStylePreview = ({
   width?: number;
   height?: number;
 }) => {
+  const crisp = isCrispLineStyle(style);
   const dashed = style === 1 || style === 3 || style === 7;
   const dashedShort = style === 5;
   const dashedLong = style === 8 || style === 11;
   const double = style === 4 || style === 12;
   const border = style === 9;
   const solidDashed = style === 13;
-  const paint =
-    style === 6 || style === 7 || (style >= 10 && style <= 13) ? PAINT_YELLOW : PAINT;
+  const isYellow = style === 6 || style === 7 || (style >= 10 && style <= 13);
+  const paint = crisp
+    ? (isYellow ? PAINT_CRISP_YELLOW : PAINT_CRISP)
+    : (isYellow ? PAINT_YELLOW : PAINT);
+  const strokeH = crisp ? 2.6 : 2;
+  const strokeY = crisp ? 3.7 : 4;
   return (
     <svg width={width} height={height} viewBox="0 0 36 10" fill="none">
       {solidDashed ? (
@@ -81,13 +88,13 @@ export const LineStylePreview = ({
         </>
       ) : dashed ? (
         <>
-          <rect x="1" y="4" width="6" height="2" fill={paint} />
-          <rect x="10.5" y="4" width="6" height="2" fill={paint} />
-          <rect x="20" y="4" width="6" height="2" fill={paint} />
-          <rect x="29.5" y="4" width="5.5" height="2" fill={paint} />
+          <rect x="1" y={strokeY} width="6" height={strokeH} fill={paint} />
+          <rect x="10.5" y={strokeY} width="6" height={strokeH} fill={paint} />
+          <rect x="20" y={strokeY} width="6" height={strokeH} fill={paint} />
+          <rect x="29.5" y={strokeY} width="5.5" height={strokeH} fill={paint} />
         </>
       ) : (
-        <rect x="1" y="4" width="34" height="2" fill={paint} />
+        <rect x="1" y={strokeY} width="34" height={strokeH} fill={paint} />
       )}
     </svg>
   );
@@ -106,8 +113,8 @@ const hatch = (color: string, step: number, strokeWidth = 1.6) => {
 };
 
 // Keyed by styleId (kStyleSurfaceNames and the areaStyle.* i18n keys): 0 Concrete,
-// 1 Junction box (G87), 2 White stripes, 3 White stripes sparse, 4 Yellow stripes, 5 Green
-// bike lane, 6 Red bus lane, 7-13 unused, 14 Asphalt (G87 VA), 15+ vanilla surfaces.
+// 1 Junction box, 2 White stripes, 3 White stripes sparse, 4 Yellow stripes, 5 Green
+// bike lane, 6 Red bus lane, 7-13 unused, 14 Asphalt, 15+ vanilla decorative surfaces.
 const SOLID_FILLS: Record<number, string> = {
   0: CONCRETE,
   5: BIKE_GREEN,

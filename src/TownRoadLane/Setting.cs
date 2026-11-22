@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Colossal.Core;
 using Colossal.IO.AssetDatabase;
 using Game.Input;
@@ -12,11 +13,10 @@ using TownRoadLane.Systems.Topology;
 namespace TownRoadLane
 {
     /// <summary>
-    /// Mod settings: an on/off switch and a mesh style (vanilla or G87) per automatic feature,
-    /// segment-splitting thresholds for the marking editor, and keybinds. Each clone system reads
-    /// its style when it builds prefabs; G87 options fall back to vanilla when the G87 Road
-    /// Markings mod isn't loaded. Style changes need a game restart (see the note above the
-    /// keybind group).
+    /// Mod settings: an on/off switch and a mesh style (vanilla or built-in procedural) per
+    /// automatic feature, segment-splitting thresholds for the marking editor, and keybinds.
+    /// Each clone system reads its style when it builds prefabs. Style changes need a game
+    /// restart (see the note above the keybind group).
     /// </summary>
     [FileLocation(nameof(TownRoadLane))]
     [SettingsUIGroupOrder(kEdgeGroup, kParkingGroup, kSegmentGroup, kSegmentDevGroup, kKeybindGroup)]
@@ -66,6 +66,7 @@ namespace TownRoadLane
         private bool _saveDirty;
         private int _quietFrames;
         private bool _saverRegistered;
+        private volatile bool _saveInFlight;
 
         public override void Apply()
         {
@@ -78,17 +79,19 @@ namespace TownRoadLane
         }
 
         // Never unregisters (returns false), so later Apply() calls reuse it. Idle cost is one
-        // bool check per frame.
+        // bool check per frame. Only one SaveSpecificSetting task is allowed in flight at a time;
+        // any edits arriving while a save is running re-arm _saveDirty and flush once it finishes.
         private bool SaveWhenQuiet()
         {
-            if (!_saveDirty) return false;
+            if (!_saveDirty || _saveInFlight) return false;
             if (++_quietFrames < kQuietFramesBeforeSave) return false;
             _saveDirty = false;
-            SaveNow();
+            _saveInFlight = true;
+            _ = SaveNowAsync();
             return false;
         }
 
-        private async void SaveNow()
+        private async Task SaveNowAsync()
         {
             try
             {
@@ -98,6 +101,10 @@ namespace TownRoadLane
             catch (Exception e)
             {
                 Mod.log.Warn($"settings: coalesced save failed: {e.Message}");
+            }
+            finally
+            {
+                _saveInFlight = false;
             }
         }
 
@@ -125,8 +132,8 @@ namespace TownRoadLane
 
         [SettingsUISection(kSection, kParkingGroup)]
         [SettingsUIDisableByCondition(typeof(TownRoadLaneSetting), nameof(IsParkingDisabled))]
-        // G87 is a dependency of the mod, so the G87 dashed decal is the default. Without G87,
-        // ParkingLineCloneSystem falls back to the vanilla dense dashed mesh.
+        // Default uses the built-in crisp white dashed style (enum member name kept for .coc
+        // compatibility with older TownRoadLane settings files).
         public ParkingLineStyleEnum ParkingLineStyle { get; set; } = ParkingLineStyleEnum.WhiteDashed_G87;
 
         [SettingsUISection(kSection, kParkingGroup)]

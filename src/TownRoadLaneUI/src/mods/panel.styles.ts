@@ -335,14 +335,6 @@ export const SwatchWrap = styled.span`
   }
 `;
 
-// "G87" mark after a line swatch: G87 and vanilla variants have the same preview.
-export const G87Mark = styled.span`
-  margin-left: 3rem;
-  font-size: 9rem;
-  color: ${T.colorTextMuted};
-  letter-spacing: 0.4rem;
-`;
-
 export const LineSegCount = styled.span`
   font-size: ${T.fontSizeXs};
   color: ${T.colorTextMuted};

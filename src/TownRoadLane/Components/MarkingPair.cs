@@ -38,7 +38,15 @@ namespace TownRoadLane.Components
 
         public void Deserialize<TReader>(TReader reader) where TReader : IReader
         {
-            reader.Read(out int _);  // version
+            reader.Read(out int version);
+            if (version < 2)
+            {
+                sourceEdge = Entity.Null;
+                sourceGapIndex = 0;
+                targetEdge = Entity.Null;
+                targetGapIndex = 0;
+                return;
+            }
             reader.Read(out sourceEdge);
             reader.Read(out sourceGapIndex);
             reader.Read(out targetEdge);

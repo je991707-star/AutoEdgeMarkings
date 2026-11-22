@@ -34,7 +34,15 @@ namespace TownRoadLane.Components
 
         public void Deserialize<TReader>(TReader reader) where TReader : IReader
         {
-            reader.Read(out int _); // version
+            reader.Read(out int version);
+            if (version < 1)
+            {
+                styleId = 0;
+                visible = false;
+                firstVertex = 0;
+                vertexCount = 0;
+                return;
+            }
             reader.Read(out styleId);
             reader.Read(out visible);
             reader.Read(out firstVertex);
@@ -110,6 +118,17 @@ namespace TownRoadLane.Components
         public void Deserialize<TReader>(TReader reader) where TReader : IReader
         {
             reader.Read(out int version);
+            if (version < 1)
+            {
+                kind = AreaAnchorKind.LaneEndpoint;
+                refIndex = -1;
+                edgeToNext = AreaEdgeKind.Straight;
+                refEdgeA = Entity.Null;
+                refEdgeB = Entity.Null;
+                refGap = 0;
+                refPos = float3.zero;
+                return;
+            }
             reader.Read(out byte k);
             kind = (AreaAnchorKind)k;
             reader.Read(out refIndex);
@@ -171,7 +190,14 @@ namespace TownRoadLane.Components
 
         public void Deserialize<TReader>(TReader reader) where TReader : IReader
         {
-            reader.Read(out int _);
+            reader.Read(out int version);
+            if (version < 1)
+            {
+                node = Entity.Null;
+                areaIndex = -1;
+                pieceIndex = -1;
+                return;
+            }
             reader.Read(out node);
             reader.Read(out areaIndex);
             reader.Read(out pieceIndex);

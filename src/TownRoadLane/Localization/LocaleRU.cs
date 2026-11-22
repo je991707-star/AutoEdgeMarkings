@@ -27,7 +27,7 @@ namespace TownRoadLane.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.EdgeLineStyle)), "Стиль краевой линии" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.EdgeLineStyle)),
-                    "Стиль меша только автоматической краевой линии — линии, нарисованные инструментом разметки, сохраняют собственные стили. Варианты «G87» требуют мод [G87] Road Markings; без него используется ванильный стиль. Изменения вступают в силу после перезапуска игры." },
+                    "Стиль меша только автоматической краевой линии — линии, нарисованные инструментом разметки, сохраняют собственные стили. Все чёткие и ванильные стили встроены без внешних зависимостей. Изменения вступают в силу после перезапуска игры." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.YellowLeftLineEnabled)), "Жёлтая левая краевая (США)" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.YellowLeftLineEnabled)),
@@ -39,11 +39,11 @@ namespace TownRoadLane.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.ParkingLineStyle)), "Стиль линии парковки" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.ParkingLineStyle)),
-                    "Продольная линия вдоль парковочной зоны. Варианты «G87» требуют мод [G87] Road Markings. Изменения вступают в силу после перезапуска игры." },
+                    "Продольная линия вдоль парковочной зоны. Все стили встроены в мод. Изменения вступают в силу после перезапуска игры." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.ParkingEndStyle)), "Стиль концевой черты парковки" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.ParkingEndStyle)),
-                    "Короткая поперечная черта в начале и конце парковочного квартала. «Нет» отключает черты. Варианты «G87» требуют мод [G87] Road Markings. Изменения вступают в силу после перезапуска игры." },
+                    "Короткая поперечная черта в начале и конце парковочного квартала. «Нет» отключает черты. Все стили встроены в мод. Изменения вступают в силу после перезапуска игры." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.SegmentMinLengthM)), "Минимальная длина сегмента (м)" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.SegmentMinLengthM)),
@@ -79,34 +79,34 @@ namespace TownRoadLane.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(TownRoadLaneSetting.CycleAreaStyleBinding)), "Стиль области по кругу (клавиша)" },
                 { _setting.GetOptionDescLocaleID(nameof(TownRoadLaneSetting.CycleAreaStyleBinding)),
-                    "При активном инструменте листает стиль заливки для СЛЕДУЮЩЕЙ замкнутой области (бетон → вафельная разметка → белая штриховка → жёлтая штриховка → велополоса → автобусная полоса → сначала). По умолчанию U. Стили G87 без установленного мода G87 заменяются бетоном." },
+                    "При активном инструменте листает стиль заливки для СЛЕДУЮЩЕЙ замкнутой области (бетон → вафельная разметка → белая штриховка → жёлтая штриховка → велополоса → автобусная полоса → асфальт → покрытия). По умолчанию U." },
 
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolid), "Белая сплошная" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolidThick), "Белая сплошная (толстая)" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteDashed), "Белый пунктир" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.YellowSolid), "Жёлтая сплошная" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolid_G87), "Белая сплошная (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteDashed_G87), "Белый пунктир (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.YellowSolid_G87), "Жёлтая сплошная (G87)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteSolid_G87), "Белая сплошная (чёткая)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.WhiteDashed_G87), "Белый пунктир (чёткий)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.EdgeLineStyleEnum.YellowSolid_G87), "Жёлтая сплошная (чёткая)" },
 
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteDashedDense), "Белый пунктир (частый)" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteDashed), "Белый пунктир" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteSolid), "Белая сплошная" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowDashed), "Жёлтый пунктир" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowSolid), "Жёлтая сплошная" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteSolid_G87), "Белая сплошная (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteDashed_G87), "Белый пунктир (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowSolid_G87), "Жёлтая сплошная (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowDashed_G87), "Жёлтый пунктир (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.BlueSolid_G87), "Синяя сплошная (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.BlueDashed_G87), "Синий пунктир (G87)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteSolid_G87), "Белая сплошная (чёткая)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.WhiteDashed_G87), "Белый пунктир (чёткий)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowSolid_G87), "Жёлтая сплошная (чёткая)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.YellowDashed_G87), "Жёлтый пунктир (чёткий)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.BlueSolid_G87), "Синяя сплошная" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingLineStyleEnum.BlueDashed_G87), "Синий пунктир" },
 
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.None), "Нет" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.WhiteSolid), "Белая сплошная" },
                 { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.WhiteSolidThick), "Белая сплошная (толстая)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.WhiteTerminal_G87), "Белая концевая линия (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.YellowTerminal_G87), "Жёлтая концевая линия (G87)" },
-                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.BlueSolid_G87), "Синяя сплошная (G87)" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.WhiteTerminal_G87), "Белая концевая линия" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.YellowTerminal_G87), "Жёлтая концевая линия" },
+                { _setting.GetEnumValueLocaleID(TownRoadLaneSetting.ParkingEndStyleEnum.BlueSolid_G87), "Синяя сплошная" },
             };
         }
 

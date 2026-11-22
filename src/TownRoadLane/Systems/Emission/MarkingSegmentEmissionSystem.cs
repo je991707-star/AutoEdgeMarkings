@@ -60,6 +60,9 @@ namespace TownRoadLane.Systems.Emission
         // One warning per (node, line) over the PathNode slot capacity: the check fails every
         // tick for such a line, so unthrottled logging would flood.
         private readonly HashSet<(Entity, int)> _slotOverflowWarned = new HashSet<(Entity, int)>();
+        // Throttle the missing-solid-prefab deferral warning to once per outage (prevents
+        // per-frame log flooding during boot/load).
+        private bool _solidMissingWarned;
         private PrefabSystem _prefabSystem;
         private EdgeLineCloneSystem _edgeLineSys;
         private CityConfigurationSystem _cityConfig;
@@ -101,6 +104,8 @@ namespace TownRoadLane.Systems.Emission
         {
             base.OnGameLoaded(serializationContext);
             _passPending = true;
+            _solidMissingWarned = false;
+            _slotOverflowWarned.Clear();
             _retryAnyUntil = UnityEngine.Time.realtimeSinceStartup + kPostLoadRetrySeconds;
         }
 
@@ -148,11 +153,16 @@ namespace TownRoadLane.Systems.Emission
                 bool isNA = IsNATheme();
                 if (!TryResolveStylePrefab(MarkingStyle.Solid, isNA, out var solidPair))
                 {
-                    log.Warn("segment-emission: solid prefab not resolved yet — deferring entire tick");
+                    if (!_solidMissingWarned)
+                    {
+                        _solidMissingWarned = true;
+                        log.Warn("segment-emission: solid prefab not resolved yet — deferring until prefabs finish initializing");
+                    }
                     _passPending = true;
                 }
                 else
                 {
+                    _solidMissingWarned = false;
                     var prefabByStyle = new Dictionary<MarkingStyle, (Entity prefab, EntityArchetype arch)>
                     {
                         [MarkingStyle.Solid] = solidPair,

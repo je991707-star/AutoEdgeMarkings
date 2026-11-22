@@ -1,5 +1,6 @@
 using Colossal.Serialization.Entities;
 using Unity.Entities;
+using Unity.Mathematics;
 using TownRoadLane.Geometry;
 
 namespace TownRoadLane.Components
@@ -45,14 +46,31 @@ namespace TownRoadLane.Components
         public void Deserialize<TReader>(TReader reader) where TReader : IReader
         {
             reader.Read(out int version);
+            if (version < 1)
+            {
+                sourceEdge = Entity.Null;
+                sourceGapIndex = 0;
+                targetEdge = Entity.Null;
+                targetGapIndex = 0;
+                style = 0;
+                curvature = MarkingCurveBuilder.kPullFactor;
+                return;
+            }
             reader.Read(out sourceEdge);
             reader.Read(out sourceGapIndex);
             reader.Read(out targetEdge);
             reader.Read(out targetGapIndex);
             reader.Read(out style);
             // Version 3 lines have no curvature field and used this constant.
-            if (version >= 4) reader.Read(out curvature);
-            else curvature = MarkingCurveBuilder.kPullFactor;
+            if (version >= 4)
+            {
+                reader.Read(out curvature);
+                if (!math.isfinite(curvature)) curvature = MarkingCurveBuilder.kPullFactor;
+            }
+            else
+            {
+                curvature = MarkingCurveBuilder.kPullFactor;
+            }
         }
     }
 }

@@ -100,7 +100,8 @@ namespace TownRoadLane.Systems.Emission
             return kStyleSolidConcrete;
         }
 
-        // Resolved lazily: G87 surfaces appear some seconds after load. Entity.Null means retry.
+        // Resolved lazily as VanillaSurfaceLateClone registers built-in surfaces after boot.
+        // Entity.Null means retry.
         private Entity[] _stylePrefabEntities = new Entity[kStyleCount];
 
         // Unresolved-style report, see TryResolveAllStyles. Surface prefabs keep importing for
@@ -171,6 +172,8 @@ namespace TownRoadLane.Systems.Emission
             base.OnGameLoaded(serializationContext);
             _orphanSweepPending = true;
             _orphanSweepPatience = kOrphanSweepMaxWaitTicks;
+            _blockedTicks = 0;
+            _fallbackWarned.Clear();
             _passPending = true;
         }
 
@@ -196,8 +199,8 @@ namespace TownRoadLane.Systems.Emission
 
             if (_orphanSweepPending)
             {
-                // Wait for the full style set so G87 orphans are recognised too, but not
-                // forever: G87 may not be installed.
+                // Wait for the built-in style set so all untagged pre-2.2.0 orphans are recognised,
+                // bounded by patience so a missing surface never stalls the sweep forever.
                 if (!AnyStyleMissing() || --_orphanSweepPatience <= 0)
                 {
                     _orphanSweepPending = false;
@@ -424,12 +427,8 @@ namespace TownRoadLane.Systems.Emission
                 return;
             }
 
-            // G87 updates have renamed their surface prefabs before, which silently breaks the
-            // exact-name match and turns every fill into concrete. Once the import has settled
-            // with a style still missing, log the missing styles and the runtime names of all G87
-            // surfaces, which is exactly what kStyleSurfaceNames needs. Only once per settled
-            // count: logging on every change during the long import floods the log and gets the
-            // mod flagged by Skyve.
+            // Once surface registration has settled with a style still missing, log a single
+            // summary report per settled count (avoids log flooding during boot).
             if (now - _surfaceCountChangedAt < kSurfaceSettleSeconds || surfaceCount == _lastSurfaceDumpCount) return;
             _lastSurfaceDumpCount = surfaceCount;
             LogMissingStyles();
@@ -482,7 +481,7 @@ namespace TownRoadLane.Systems.Emission
             int s = (styleId >= 0 && styleId < kStyleCount) ? styleId : kStyleSolidConcrete;
             var e = _stylePrefabEntities[s];
             if (e == Entity.Null && s != kStyleSolidConcrete && IsStyleEnabled(s) && _fallbackWarned.Add(s))
-                log.Warn($"[area-emission] style {s} '{kStyleSurfaceNames[s]}' unresolved — spawning as concrete (self-corrects once the prefab loads; stays concrete if its pack is missing)");
+                log.Warn($"[area-emission] style {s} '{kStyleSurfaceNames[s]}' unresolved — spawning as concrete (self-corrects once built-in surface registration finishes)");
             return e != Entity.Null ? e : solidFallback;
         }
 

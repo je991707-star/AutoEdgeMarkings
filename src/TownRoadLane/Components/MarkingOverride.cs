@@ -44,7 +44,12 @@ namespace TownRoadLane.Components
 
         public void Deserialize<TReader>(TReader reader) where TReader : IReader
         {
-            reader.Read(out int _);
+            reader.Read(out int version);
+            if (version < 1)
+            {
+                hide = MarkingCategory.None;
+                return;
+            }
             reader.Read(out uint h);
             hide = (MarkingCategory)h;
         }
