@@ -37,6 +37,24 @@ namespace TownRoadLane.Systems.Prefabs
         private static readonly List<TextureAsset> s_PinnedTextures = new List<TextureAsset>();
         private static readonly HashSet<string> s_Failed = new HashSet<string>();
 
+        private const string kAssetSubPath = "TownRoadLane";
+        private static ILocalAssetDatabase s_Database;
+
+        // Transient in-memory database (only an empty temp folder is created; nothing is saved),
+        // registered with AssetDatabase.global so AssetReference lookups by id find our assets.
+        private static ILocalAssetDatabase Database
+        {
+            get
+            {
+                if (s_Database == null)
+                {
+                    s_Database = AssetDatabase.GetTransient(0L);
+                    AssetDatabase.global.RegisterDatabase(s_Database).Wait();
+                }
+                return s_Database;
+            }
+        }
+
         private struct MeshSpec
         {
             public string name;
@@ -133,19 +151,22 @@ namespace TownRoadLane.Systems.Prefabs
 
             Texture2D tex = spec.buildTexture();
 
-            var texAsset = new TextureAsset
-            {
-                id = new Identifier(Colossal.Hash128.CreateGuid(spec.name + "_BaseColorMap")),
-            };
+            // RenderPrefab stores surfaces as AssetReference ids that ManagedBatchSystem resolves
+            // through AssetDatabase.global, so both assets must live in a registered database;
+            // a bare `new SurfaceAsset()` resolves to null and CreateBatch throws.
+            var texAsset = Database.AddAsset<TextureAsset>(
+                AssetDataPath.Create(kAssetSubPath, spec.name + "_BaseColorMap"),
+                Colossal.Hash128.CreateGuid(spec.name + "_BaseColorMap"));
             texAsset.SetData(tex);
             texAsset.Load(0, TextureAsset.KeepOnCPU.Object);
             s_PinnedTextures.Add(texAsset);
 
             // CopyFrom carries the vanilla material template; SetData(Material) on a fresh
             // SurfaceAsset has none and throws "Template material was not found".
-            var surfaceAsset = new SurfaceAsset();
+            var surfaceAsset = Database.AddAsset<SurfaceAsset>(
+                AssetDataPath.Create(kAssetSubPath, spec.name + "_SurfaceAsset"),
+                Colossal.Hash128.CreateGuid(spec.name + "_SurfaceAsset"));
             surfaceAsset.CopyFrom(srcSurface);
-            surfaceAsset.id = new Identifier(Colossal.Hash128.CreateGuid(spec.name + "_SurfaceAsset"));
             surfaceAsset.UpdateTexture("_BaseColorMap", texAsset);
             if (surfaceAsset.HasProperty("_BaseColor"))
                 surfaceAsset.UpdateColors(new[] { new KeyValuePair<string, Color>("_BaseColor", Color.white) });
