@@ -228,6 +228,8 @@ namespace TownRoadLane.Systems.Prefabs
                 && naVanillaEdge.TryGet<SecondaryLane>(out var naVanillaSec) && naVanillaSec.m_LeftLanes != null)
             {
                 highwayYellowInfos = LaneCloning.DeduplicateLaneInfos(naVanillaSec.m_LeftLanes);
+                // Before vanilla init (same tick) this in-memory flag is enough and stripped stays 0;
+                // the buffer strip below covers host buffers that were already built.
                 naVanillaSec.m_CanFlipSides = false;
                 Entity naEdgeEnt = _prefabSystem.GetEntity(naVanillaEdge);
                 int stripped = 0;

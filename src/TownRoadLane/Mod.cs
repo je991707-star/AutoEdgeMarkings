@@ -92,11 +92,12 @@ namespace TownRoadLane
             // add it here in GameSimulation when needed.
 #endif
 
-            // Marking prefab clones. Run after PrefabInitializeSystem in PrefabUpdate (matching
-            // Road Builder's registration order) so vanilla host lanes and meshes are initialized
-            // before our clones are constructed via Clone() + single AddPrefab().
-            updateSystem.UpdateAfter<EdgeLineCloneSystem, Game.Prefabs.PrefabInitializeSystem>(SystemUpdatePhase.PrefabUpdate);
-            updateSystem.UpdateAfter<ParkingLineCloneSystem, Game.Prefabs.PrefabInitializeSystem>(SystemUpdatePhase.PrefabUpdate);
+            // Marking prefab clones. Must run BEFORE PrefabInitializeSystem: a prefab added after it
+            // in the same PrefabUpdate tick skips initialization (invalid lane archetype) but still
+            // gets indexed into host SecondaryNetLane buffers, and the first road built then crashes
+            // natively in ModificationBarrier4B playback.
+            updateSystem.UpdateBefore<EdgeLineCloneSystem, Game.Prefabs.PrefabInitializeSystem>(SystemUpdatePhase.PrefabUpdate);
+            updateSystem.UpdateBefore<ParkingLineCloneSystem, Game.Prefabs.PrefabInitializeSystem>(SystemUpdatePhase.PrefabUpdate);
 
             // Keep vanilla SecondaryLaneSystem enabled for full compatibility with game patches
             // and mods such as Road Builder. Instead of replacing it, MarkingSuppressionSystem

@@ -116,6 +116,8 @@ namespace TownRoadLane.Systems.Prefabs
                 clone = null;
                 return false;
             }
+            // Clone() copies the source's old names; left in, they collide in PrefabSystem's ID map.
+            if (clone.Has<ObsoleteIdentifiers>()) clone.Remove<ObsoleteIdentifiers>();
 
             laneByName[cloneName] = clone;
             isNew = true;

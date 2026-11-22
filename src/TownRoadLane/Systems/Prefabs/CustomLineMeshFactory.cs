@@ -35,6 +35,7 @@ namespace TownRoadLane.Systems.Prefabs
         // Retain asset wrappers for the process lifetime so neither GC nor weak caches drop them.
         private static readonly List<SurfaceAsset> s_PinnedSurfaces = new List<SurfaceAsset>();
         private static readonly List<TextureAsset> s_PinnedTextures = new List<TextureAsset>();
+        private static readonly HashSet<string> s_Failed = new HashSet<string>();
 
         private struct MeshSpec
         {
@@ -77,6 +78,8 @@ namespace TownRoadLane.Systems.Prefabs
             {
                 var spec = kSpecs[i];
                 if (meshByName.ContainsKey(spec.name)) continue;
+                // Both clone systems call this; a spec that already failed must not retry and re-log.
+                if (s_Failed.Contains(spec.name)) continue;
 
                 if (prefabSystem.TryGetPrefab(new PrefabID(nameof(RenderPrefab), spec.name), out var existingBase)
                     && existingBase is RenderPrefab existingMesh)
@@ -103,6 +106,7 @@ namespace TownRoadLane.Systems.Prefabs
                 }
                 catch (Exception e)
                 {
+                    s_Failed.Add(spec.name);
                     log.Warn($"CustomLineMeshFactory: failed to build '{spec.name}' ({e.GetType().Name}: {e.Message}) — callers will fall back to vanilla mesh");
                 }
             }
@@ -128,12 +132,6 @@ namespace TownRoadLane.Systems.Prefabs
             }
 
             Texture2D tex = spec.buildTexture();
-            var mat = ProceduralTextureFactory.Pin(new Material(srcMat) { name = spec.name + " Material" });
-            if (mat.HasProperty("_BaseColorMap")) mat.SetTexture("_BaseColorMap", tex);
-            mat.mainTexture = tex;
-            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", Color.white);
-            if (spec.drawOrderOffset != 0 && mat.HasProperty("_DrawOrder"))
-                mat.SetFloat("_DrawOrder", mat.GetFloat("_DrawOrder") + spec.drawOrderOffset);
 
             var texAsset = new TextureAsset
             {
@@ -143,12 +141,16 @@ namespace TownRoadLane.Systems.Prefabs
             texAsset.Load(0, TextureAsset.KeepOnCPU.Object);
             s_PinnedTextures.Add(texAsset);
 
-            var surfaceAsset = new SurfaceAsset
-            {
-                id = new Identifier(Colossal.Hash128.CreateGuid(spec.name + "_SurfaceAsset")),
-            };
-            surfaceAsset.SetData(mat);
+            // CopyFrom carries the vanilla material template; SetData(Material) on a fresh
+            // SurfaceAsset has none and throws "Template material was not found".
+            var surfaceAsset = new SurfaceAsset();
+            surfaceAsset.CopyFrom(srcSurface);
+            surfaceAsset.id = new Identifier(Colossal.Hash128.CreateGuid(spec.name + "_SurfaceAsset"));
             surfaceAsset.UpdateTexture("_BaseColorMap", texAsset);
+            if (surfaceAsset.HasProperty("_BaseColor"))
+                surfaceAsset.UpdateColors(new[] { new KeyValuePair<string, Color>("_BaseColor", Color.white) });
+            if (spec.drawOrderOffset != 0 && surfaceAsset.TryGetFloatProperty("_DrawOrder", out float drawOrder))
+                surfaceAsset.UpdateFloats(new[] { new KeyValuePair<string, float>("_DrawOrder", drawOrder + spec.drawOrderOffset) });
             // Pin refcount >= 1 so BatchMeshSystem never unloads this in-memory surface.
             surfaceAsset.Load(0, loadTextures: true, TextureAsset.KeepOnCPU.Object, useVT: false);
             s_PinnedSurfaces.Add(surfaceAsset);
