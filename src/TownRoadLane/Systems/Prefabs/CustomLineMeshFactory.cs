@@ -64,7 +64,10 @@ namespace TownRoadLane.Systems.Prefabs
         {
             public string name;
             public string sourceVanillaMesh;
+            // Null keeps the vanilla albedo, which is where the dash pattern lives.
             public Func<Texture2D> buildTexture;
+            // _BaseColor multiplier; null = white.
+            public Color? tint;
             public int drawOrderOffset;
         }
 
@@ -78,9 +81,11 @@ namespace TownRoadLane.Systems.Prefabs
             new() { name = kBlueSolid,        sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kBlueSolid, ProceduralTextureFactory.kPaintBlue, widthFraction: 0.72f) },
             new() { name = kWhiteTerminal,    sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kWhiteTerminal, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.88f) },
             new() { name = kYellowTerminal,   sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kYellowTerminal, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.88f) },
-            new() { name = kCrispWhiteParkingDashed,  sourceVanillaMesh = kVanillaDenseDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kCrispWhiteParkingDashed, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f, dashFraction: 0.54f) },
-            new() { name = kCrispYellowParkingDashed, sourceVanillaMesh = kVanillaDenseDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kCrispYellowParkingDashed, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.78f, dashFraction: 0.54f) },
-            new() { name = kBlueParkingDashed,        sourceVanillaMesh = kVanillaDenseDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kBlueParkingDashed, ProceduralTextureFactory.kPaintBlue, widthFraction: 0.72f, dashFraction: 0.52f) },
+            // Parking dashes keep the vanilla dense albedo: its short dash pattern is in the texture,
+            // so a procedural one-dash-per-tile texture turns it back into lane-divider dashes.
+            new() { name = kCrispWhiteParkingDashed,  sourceVanillaMesh = kVanillaDenseDashedSource },
+            new() { name = kCrispYellowParkingDashed, sourceVanillaMesh = kVanillaDenseDashedSource, tint = (Color)ProceduralTextureFactory.kPaintYellow },
+            new() { name = kBlueParkingDashed,        sourceVanillaMesh = kVanillaDenseDashedSource, tint = (Color)ProceduralTextureFactory.kPaintBlue },
         };
 
         /// <summary>All vanilla source mesh names required to build the custom line meshes.</summary>
@@ -157,17 +162,19 @@ namespace TownRoadLane.Systems.Prefabs
                 return null;
             }
 
-            Texture2D tex = spec.buildTexture();
-
             // RenderPrefab stores surfaces as AssetReference ids that ManagedBatchSystem resolves
             // through AssetDatabase.global, so both assets must live in a registered database;
             // a bare `new SurfaceAsset()` resolves to null and CreateBatch throws.
-            var texAsset = Database.AddAsset<TextureAsset>(
-                AssetDataPath.Create(kAssetSubPath, spec.name + "_BaseColorMap"),
-                Colossal.Hash128.CreateGuid(spec.name + "_BaseColorMap"));
-            texAsset.SetData(tex);
-            texAsset.Load(0, TextureAsset.KeepOnCPU.Object);
-            s_PinnedTextures.Add(texAsset);
+            TextureAsset texAsset = null;
+            if (spec.buildTexture != null)
+            {
+                texAsset = Database.AddAsset<TextureAsset>(
+                    AssetDataPath.Create(kAssetSubPath, spec.name + "_BaseColorMap"),
+                    Colossal.Hash128.CreateGuid(spec.name + "_BaseColorMap"));
+                texAsset.SetData(spec.buildTexture());
+                texAsset.Load(0, TextureAsset.KeepOnCPU.Object);
+                s_PinnedTextures.Add(texAsset);
+            }
 
             // CopyFrom carries the vanilla material template; SetData(Material) on a fresh
             // SurfaceAsset has none and throws "Template material was not found".
@@ -175,9 +182,9 @@ namespace TownRoadLane.Systems.Prefabs
                 AssetDataPath.Create(kAssetSubPath, spec.name + "_SurfaceAsset"),
                 Colossal.Hash128.CreateGuid(spec.name + "_SurfaceAsset"));
             surfaceAsset.CopyFrom(srcSurface);
-            surfaceAsset.UpdateTexture("_BaseColorMap", texAsset);
+            if (texAsset != null) surfaceAsset.UpdateTexture("_BaseColorMap", texAsset);
             if (surfaceAsset.HasProperty("_BaseColor"))
-                surfaceAsset.UpdateColors(new[] { new KeyValuePair<string, Color>("_BaseColor", Color.white) });
+                surfaceAsset.UpdateColors(new[] { new KeyValuePair<string, Color>("_BaseColor", spec.tint ?? Color.white) });
             if (spec.drawOrderOffset != 0 && surfaceAsset.TryGetFloatProperty("_DrawOrder", out float drawOrder))
                 surfaceAsset.UpdateFloats(new[] { new KeyValuePair<string, float>("_DrawOrder", drawOrder + spec.drawOrderOffset) });
             // Pin refcount >= 1 so BatchMeshSystem never unloads this in-memory surface.
