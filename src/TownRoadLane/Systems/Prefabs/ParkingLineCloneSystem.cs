@@ -15,7 +15,7 @@ namespace TownRoadLane.Systems.Prefabs
     /// Parallel parking uses the 'Parking Lane 2' lane prefab, which no vanilla marking references.
     /// Two prefabs per region theme are cloned from the closest vanilla marking, so material, LODs,
     /// submeshes and archetype come along, and then get the mesh chosen in the settings (vanilla or
-    /// a G87 Road Markings decal):
+    /// built-in procedural decal from CustomLineMeshFactory):
     ///
     ///  * "Parallel Parking Line", cloned from 'Car Bay Line' and hosted on 'Parking Lane 2' on the
     ///    parking side: a line along the whole zone.
@@ -125,9 +125,17 @@ namespace TownRoadLane.Systems.Prefabs
                     return false;
             }
 
-            var meshByName = LaneCloning.ResolveMeshes(_prefabSystem, _meshPrefabQuery, new[] { lineMeshName, endMeshName, kFallbackLineMesh, kFallbackEndMesh });
+            var meshNames = new HashSet<string>(CustomLineMeshFactory.RequiredVanillaSources)
+            {
+                lineMeshName, endMeshName, kFallbackLineMesh, kFallbackEndMesh
+            };
+            var meshByName = LaneCloning.ResolveMeshes(_prefabSystem, _meshPrefabQuery, meshNames);
             if (!meshByName.ContainsKey(kFallbackLineMesh) || !meshByName.ContainsKey(kFallbackEndMesh))
                 return false;
+            foreach (var req in CustomLineMeshFactory.RequiredVanillaSources)
+                if (!meshByName.ContainsKey(req)) return false;
+
+            CustomLineMeshFactory.EnsureCustomLineMeshes(_prefabSystem, meshByName);
 
             RenderPrefab lineMesh = LaneCloning.PickMesh(meshByName, lineMeshName, kFallbackLineMesh, "longitudinal line");
             RenderPrefab endMesh = wantEnds ? LaneCloning.PickMesh(meshByName, endMeshName, kFallbackEndMesh, "end tick") : null;

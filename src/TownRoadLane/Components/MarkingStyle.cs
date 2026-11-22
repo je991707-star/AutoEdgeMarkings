@@ -28,8 +28,7 @@ namespace TownRoadLane.Components
         G87Yellow = 6,
         G87YellowDashed = 7,
         DashedLong = 8,
-        // Vanilla curb texture from the "[G87] Vanilla Curb" pack (elGendo87), a required
-        // dependency. PickMesh falls back to the source prefab's own mesh if the pack is missing.
+        // Built-in concrete curb strip texture (CustomLineMeshFactory.kCurb), zero external pack required.
         Curb = 9,
         // YellowDashed uses the '- Long' mesh: vanilla has no normal-length yellow dashed line.
         // YellowSolidDashed is the US passing-zone center line (solid on one side, dashed on the
@@ -43,17 +42,9 @@ namespace TownRoadLane.Components
     public static class MarkingStyleExtensions
     {
         /// <summary>
-        /// Number of overlapping copies drawn for a style. G87 decals are semi-transparent; in
-        /// parking markings vanilla draws them once from each neighbouring lane, so a single
-        /// copy of ours looks noticeably dimmer. Vanilla decals are opaque and need one.
+        /// Number of overlapping copies drawn for a style. All vanilla and built-in procedural
+        /// decals are opaque, so a single draw pass suffices.
         /// </summary>
-        public static int DrawPasses(this MarkingStyle style) => style switch
-        {
-            MarkingStyle.G87Solid => 3,
-            MarkingStyle.G87Dashed => 3,
-            MarkingStyle.G87Yellow => 3,
-            MarkingStyle.G87YellowDashed => 3,
-            _ => 1,
-        };
+        public static int DrawPasses(this MarkingStyle style) => 1;
     }
 }

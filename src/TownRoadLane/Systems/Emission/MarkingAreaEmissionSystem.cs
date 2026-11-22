@@ -49,36 +49,36 @@ namespace TownRoadLane.Systems.Emission
 
         // styleId to SurfacePrefab name. styleId is saved with each area, so slots are never
         // renumbered: a retired slot keeps an empty name (never resolves, spawns concrete, hidden
-        // from the UI). G87 slots fall back to concrete when the pack is not installed.
+        // from the UI). Slots 1-6 and 14-22 are all self-contained built-in surfaces registered
+        // at runtime by VanillaSurfaceLateClone (zero EAI / G87 dependency).
         //
-        // Render order: the G87 junction box (priority 4, all layers) draws over road markings,
-        // G87 stripes (Roads layer, priority -10) draw on roads but under markings.
+        // Render order: Junction Box (priority +4, Roads layer) draws over road markings;
+        // stripes, bus/bike lanes and asphalt patch (priority -10) draw on roads under markings.
         private static readonly string[] kStyleSurfaceNames = new[]
         {
-            "Concrete Surface 01",                                                                              // 0 Solid
-            "G87 UK Road Markings Misc G87 UK Junction Box Surface",                                             // 1 Junction Box (over markings)
-            "G87 Road Markings SC Misc G87 Stripes 1to1 30cm Surface",                                           // 2 White Stripes dense
-            "G87 Road Markings SC Misc G87 Stripes 2to1 60cm Surface",                                           // 3 White Stripes sparse
-            "G87 Road Markings SC Misc G87 Stripes 1to1 30cm Yellow Surface",                                    // 4 Yellow Stripes dense
-            "G87 UK Road Markings Misc G87 CS2 Green Bike Lane UM Surface",                                      // 5 Green bike
-            "G87 UK Road Markings Misc G87 CS2 Red Bus Lane UM Surface",                                         // 6 Red bus
-            "",                                                                                                  // 7 (reserved: Grass)
-            "",                                                                                                  // 8 (reserved: Grass, dark)
-            "",                                                                                                  // 9 (reserved: Sand)
-            "",                                                                                                  // 10 (reserved: Pavement)
-            "",                                                                                                  // 11 (reserved: Tiles 1)
-            "",                                                                                                  // 12 (reserved: Tiles 2)
-            "",                                                                                                  // 13 (reserved: Tiles 3)
-            "G87 Vanilla Asphalt Pavement G87 VA Surface URM Surface",                                           // 14 Asphalt patch (layer=Terrain,Roads)
-            // Registered at runtime by VanillaSurfaceLateClone.
-            VanillaSurfaceLateClone.kCloneGrass,                                                                 // 15 Grass
-            "",                                                                                                  // 16 (reserved: Grass variant B)
-            VanillaSurfaceLateClone.kCloneGrassDark,                                                             // 17 Grass, dark
-            VanillaSurfaceLateClone.kCloneSand,                                                                  // 18 Sand
-            VanillaSurfaceLateClone.kClonePavement,                                                              // 19 Pavement
-            VanillaSurfaceLateClone.kCloneTiles1,                                                                // 20 Tiles 1
-            VanillaSurfaceLateClone.kCloneTiles2,                                                                // 21 Tiles 2
-            VanillaSurfaceLateClone.kCloneTiles3,                                                                // 22 Tiles 3
+            "Concrete Surface 01",                                   // 0 Solid
+            VanillaSurfaceLateClone.kCloneJunctionBox,               // 1 Junction Box (over markings)
+            VanillaSurfaceLateClone.kCloneWhiteStripesDense,         // 2 White Stripes dense
+            VanillaSurfaceLateClone.kCloneWhiteStripesSparse,        // 3 White Stripes sparse
+            VanillaSurfaceLateClone.kCloneYellowStripesDense,        // 4 Yellow Stripes dense
+            VanillaSurfaceLateClone.kCloneGreenBike,                 // 5 Green bike
+            VanillaSurfaceLateClone.kCloneRedBus,                    // 6 Red bus
+            "",                                                      // 7 (reserved: Grass)
+            "",                                                      // 8 (reserved: Grass, dark)
+            "",                                                      // 9 (reserved: Sand)
+            "",                                                      // 10 (reserved: Pavement)
+            "",                                                      // 11 (reserved: Tiles 1)
+            "",                                                      // 12 (reserved: Tiles 2)
+            "",                                                      // 13 (reserved: Tiles 3)
+            VanillaSurfaceLateClone.kCloneAsphaltPatch,              // 14 Asphalt patch (layer=Terrain,Roads)
+            VanillaSurfaceLateClone.kCloneGrass,                     // 15 Grass
+            "",                                                      // 16 (reserved: Grass variant B)
+            VanillaSurfaceLateClone.kCloneGrassDark,                 // 17 Grass, dark
+            VanillaSurfaceLateClone.kCloneSand,                      // 18 Sand
+            VanillaSurfaceLateClone.kClonePavement,                  // 19 Pavement
+            VanillaSurfaceLateClone.kCloneTiles1,                    // 20 Tiles 1
+            VanillaSurfaceLateClone.kCloneTiles2,                    // 21 Tiles 2
+            VanillaSurfaceLateClone.kCloneTiles3,                    // 22 Tiles 3
         };
         public static readonly int kStyleCount = kStyleSurfaceNames.Length;
         public const int kStyleSolidConcrete = 0;
@@ -462,19 +462,18 @@ namespace TownRoadLane.Systems.Emission
         private void LogMissingStyles()
         {
             using var ents = _surfacePrefabs.ToEntityArray(Allocator.Temp);
-            var report = new System.Text.StringBuilder("[area-emission] style resolve incomplete after surface import settled — missing:");
+            var report = new System.Text.StringBuilder("[area-emission] style resolve incomplete after surface init settled — missing:");
             for (int i = 0; i < kStyleCount; i++)
                 if (IsStyleEnabled(i) && _stylePrefabEntities[i] == Entity.Null)
                     report.Append(' ').Append(i).Append(" '").Append(kStyleSurfaceNames[i]).Append("';");
-            int g87Count = 0;
+            int trlCount = 0;
             for (int i = 0; i < ents.Length; i++)
             {
                 if (!_prefabSystem.TryGetPrefab<PrefabBase>(ents[i], out var pb) || pb == null) continue;
-                if (!pb.name.Contains("G87")) continue;
-                g87Count++;
-                report.AppendLine().Append("  G87 surface present: '").Append(pb.name).Append('\'');
+                if (!pb.name.StartsWith("TRL ")) continue;
+                trlCount++;
             }
-            report.AppendLine().Append("  ").Append(ents.Length).Append(" surface prefab(s) total, ").Append(g87Count).Append(" G87 among them");
+            report.AppendLine().Append("  ").Append(ents.Length).Append(" surface prefab(s) total, ").Append(trlCount).Append(" TRL built-in among them");
             log.Info(report.ToString());
         }
 

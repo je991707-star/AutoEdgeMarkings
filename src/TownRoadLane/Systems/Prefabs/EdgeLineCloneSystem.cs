@@ -58,16 +58,13 @@ namespace TownRoadLane.Systems.Prefabs
             public bool hostYellowLeft;
         }
 
-        // G87 mesh names (the same prefix appears in Setting.cs). Without G87 they do not resolve
-        // and the clone keeps the source prefab's vanilla mesh.
-        private const string kG87Prefix = "G87 UK Road Markings RoadMarking G87 ";
-        private const string kG87SolidMesh = kG87Prefix + "UK Carriageway Line White NetLaneDecal_RenderPrefab";
-        private const string kG87DashedMesh = kG87Prefix + "UK Carriageway Line White Dashed NetLaneDecal_RenderPrefab";
-        private const string kG87YellowMesh = kG87Prefix + "UK Carriageway Line Yellow NetLaneDecal_RenderPrefab";
-        private const string kG87YellowDashedMesh = kG87Prefix + "UK Carriageway Line Yellow Dashed NetLaneDecal_RenderPrefab";
-        // From the "[G87] Vanilla Curb" pack, a dependency on Paradox Mods. Manual installs may lack
-        // it; the clone then keeps the source prefab's mesh.
-        private const string kCurbMesh = "G87 Vanilla Curb Misc G87 Vanilla Curb NetLane_RenderPrefab";
+        // Built-in procedural line/curb RenderPrefab names (created by CustomLineMeshFactory with
+        // zero external EAI/G87 dependency).
+        private const string kCrispSolidMesh = CustomLineMeshFactory.kCrispWhiteSolid;
+        private const string kCrispDashedMesh = CustomLineMeshFactory.kCrispWhiteDashed;
+        private const string kCrispYellowMesh = CustomLineMeshFactory.kCrispYellowSolid;
+        private const string kCrispYellowDashedMesh = CustomLineMeshFactory.kCrispYellowDashed;
+        private const string kCurbMesh = CustomLineMeshFactory.kCurb;
 
         private static readonly StyleRecipe[] kStyleRecipes =
         {
@@ -87,13 +84,12 @@ namespace TownRoadLane.Systems.Prefabs
             new() { style = MarkingStyle.Solid,     isNA = true,  sourcePrefabName = "NA Highway Edge Line", cloneName = "TownRoadLane NA City Edge Line",       fallbackMesh = "White Solid Line Mesh",  hostOnCityLanes = false },
             new() { style = MarkingStyle.Dashed,    isNA = false, sourcePrefabName = "EU Car Lane Line",     cloneName = "TownRoadLane EU City Dashed Line",     fallbackMesh = "White Dashed Line Mesh", hostOnCityLanes = false },
             new() { style = MarkingStyle.Dashed,    isNA = true,  sourcePrefabName = "NA Car Lane Line",     cloneName = "TownRoadLane NA City Dashed Line",     fallbackMesh = "White Dashed Line Mesh", hostOnCityLanes = false },
-            // G87 styles are cloned from 'Car Bay Line': G87 decals render at full brightness on
-            // it but look washed out on Highway Edge Line or Car Lane Line, probably because of
-            // their different mesh info and material setup.
-            new() { style = MarkingStyle.G87Solid,  isNA = false, sourcePrefabName = "EU Car Bay Line", cloneName = "TownRoadLane EU City G87 Solid Line",  fallbackMesh = kG87SolidMesh,  hostOnCityLanes = false },
-            new() { style = MarkingStyle.G87Solid,  isNA = true,  sourcePrefabName = "NA Car Bay Line", cloneName = "TownRoadLane NA City G87 Solid Line",  fallbackMesh = kG87SolidMesh,  hostOnCityLanes = false },
-            new() { style = MarkingStyle.G87Dashed, isNA = false, sourcePrefabName = "EU Car Bay Line", cloneName = "TownRoadLane EU City G87 Dashed Line", fallbackMesh = kG87DashedMesh, hostOnCityLanes = false },
-            new() { style = MarkingStyle.G87Dashed, isNA = true,  sourcePrefabName = "NA Car Bay Line", cloneName = "TownRoadLane NA City G87 Dashed Line", fallbackMesh = kG87DashedMesh, hostOnCityLanes = false },
+            // Built-in crisp high-contrast styles (replaces external G87 decals; clone names stay
+            // unchanged for save-game compatibility).
+            new() { style = MarkingStyle.G87Solid,  isNA = false, sourcePrefabName = "EU Car Bay Line", cloneName = "TownRoadLane EU City G87 Solid Line",  fallbackMesh = kCrispSolidMesh,  hostOnCityLanes = false },
+            new() { style = MarkingStyle.G87Solid,  isNA = true,  sourcePrefabName = "NA Car Bay Line", cloneName = "TownRoadLane NA City G87 Solid Line",  fallbackMesh = kCrispSolidMesh,  hostOnCityLanes = false },
+            new() { style = MarkingStyle.G87Dashed, isNA = false, sourcePrefabName = "EU Car Bay Line", cloneName = "TownRoadLane EU City G87 Dashed Line", fallbackMesh = kCrispDashedMesh, hostOnCityLanes = false },
+            new() { style = MarkingStyle.G87Dashed, isNA = true,  sourcePrefabName = "NA Car Bay Line", cloneName = "TownRoadLane NA City G87 Dashed Line", fallbackMesh = kCrispDashedMesh, hostOnCityLanes = false },
             // Double lines come from a single vanilla mesh, not from two sublanes.
             new() { style = MarkingStyle.DoubleSolid, isNA = false, sourcePrefabName = "EU Car Bay Line", cloneName = "TownRoadLane EU City Double Solid Line", fallbackMesh = "White Double Solid Line Mesh", hostOnCityLanes = false },
             new() { style = MarkingStyle.DoubleSolid, isNA = true,  sourcePrefabName = "NA Car Bay Line", cloneName = "TownRoadLane NA City Double Solid Line", fallbackMesh = "White Double Solid Line Mesh", hostOnCityLanes = false },
@@ -101,13 +97,13 @@ namespace TownRoadLane.Systems.Prefabs
             // the clone keeps the source's regular dashed mesh.
             new() { style = MarkingStyle.DashedDense,     isNA = false, sourcePrefabName = "EU Car Lane Line", cloneName = "TownRoadLane EU City Dashed Dense Line",     fallbackMesh = "White Dashed Line Mesh - Dense", hostOnCityLanes = false },
             new() { style = MarkingStyle.DashedDense,     isNA = true,  sourcePrefabName = "NA Car Lane Line", cloneName = "TownRoadLane NA City Dashed Dense Line",     fallbackMesh = "White Dashed Line Mesh - Dense", hostOnCityLanes = false },
-            new() { style = MarkingStyle.G87Yellow,       isNA = false, sourcePrefabName = "EU Car Bay Line",  cloneName = "TownRoadLane EU City G87 Yellow Line",        fallbackMesh = kG87YellowMesh,       hostOnCityLanes = false },
-            new() { style = MarkingStyle.G87Yellow,       isNA = true,  sourcePrefabName = "NA Car Bay Line",  cloneName = "TownRoadLane NA City G87 Yellow Line",        fallbackMesh = kG87YellowMesh,       hostOnCityLanes = false },
-            new() { style = MarkingStyle.G87YellowDashed, isNA = false, sourcePrefabName = "EU Car Bay Line",  cloneName = "TownRoadLane EU City G87 Yellow Dashed Line", fallbackMesh = kG87YellowDashedMesh, hostOnCityLanes = false },
-            new() { style = MarkingStyle.G87YellowDashed, isNA = true,  sourcePrefabName = "NA Car Bay Line",  cloneName = "TownRoadLane NA City G87 Yellow Dashed Line", fallbackMesh = kG87YellowDashedMesh, hostOnCityLanes = false },
+            new() { style = MarkingStyle.G87Yellow,       isNA = false, sourcePrefabName = "EU Car Bay Line",  cloneName = "TownRoadLane EU City G87 Yellow Line",        fallbackMesh = kCrispYellowMesh,       hostOnCityLanes = false },
+            new() { style = MarkingStyle.G87Yellow,       isNA = true,  sourcePrefabName = "NA Car Bay Line",  cloneName = "TownRoadLane NA City G87 Yellow Line",        fallbackMesh = kCrispYellowMesh,       hostOnCityLanes = false },
+            new() { style = MarkingStyle.G87YellowDashed, isNA = false, sourcePrefabName = "EU Car Bay Line",  cloneName = "TownRoadLane EU City G87 Yellow Dashed Line", fallbackMesh = kCrispYellowDashedMesh, hostOnCityLanes = false },
+            new() { style = MarkingStyle.G87YellowDashed, isNA = true,  sourcePrefabName = "NA Car Bay Line",  cloneName = "TownRoadLane NA City G87 Yellow Dashed Line", fallbackMesh = kCrispYellowDashedMesh, hostOnCityLanes = false },
             new() { style = MarkingStyle.DashedLong,      isNA = false, sourcePrefabName = "EU Car Lane Line", cloneName = "TownRoadLane EU City Dashed Long Line",       fallbackMesh = "White Dashed Line Mesh - Long", hostOnCityLanes = false },
             new() { style = MarkingStyle.DashedLong,      isNA = true,  sourcePrefabName = "NA Car Lane Line", cloneName = "TownRoadLane NA City Dashed Long Line",       fallbackMesh = "White Dashed Line Mesh - Long", hostOnCityLanes = false },
-            // Flat curb texture for island and median edges; vanilla has no curb lane mesh.
+            // Built-in flat curb texture for island and median edges (zero external pack needed).
             new() { style = MarkingStyle.Curb,            isNA = false, sourcePrefabName = "EU Car Bay Line",  cloneName = "TownRoadLane EU City Curb Line",              fallbackMesh = kCurbMesh, hostOnCityLanes = false },
             new() { style = MarkingStyle.Curb,            isNA = true,  sourcePrefabName = "NA Car Bay Line",  cloneName = "TownRoadLane NA City Curb Line",              fallbackMesh = kCurbMesh, hostOnCityLanes = false },
             // Vanilla yellow styles: same source prefabs as their white counterparts.
@@ -206,11 +202,15 @@ namespace TownRoadLane.Systems.Prefabs
                     return false;
             }
 
-            // Resolve every mesh that might be needed in one query pass.
-            var meshNames = new HashSet<string> { edgeMeshName };
+            // Resolve every mesh that might be needed in one query pass, then ensure our built-in
+            // procedural line/curb RenderPrefabs are registered before cloning.
+            var meshNames = new HashSet<string>(CustomLineMeshFactory.RequiredVanillaSources) { edgeMeshName };
             foreach (var r in kStyleRecipes) meshNames.Add(r.fallbackMesh);
             var meshByName = LaneCloning.ResolveMeshes(_prefabSystem, _meshPrefabQuery, meshNames);
-            if (!meshByName.ContainsKey("White Solid Line Mesh")) return false;
+            foreach (var req in CustomLineMeshFactory.RequiredVanillaSources)
+                if (!meshByName.ContainsKey(req)) return false;
+
+            CustomLineMeshFactory.EnsureCustomLineMeshes(_prefabSystem, meshByName);
 
             // Yellow left line on highways. Vanilla 'NA Highway Edge Line' hosts the highway lanes
             // in m_LeftLanes with canFlipSides=true, so it draws white on both edges. While the
