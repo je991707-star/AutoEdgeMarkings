@@ -155,9 +155,9 @@ namespace TownRoadLane.Systems.UI
         }
 
         /// <summary>Toggles the "hide vanilla markings" override (<see cref="MarkingOverride"/>
-        /// with All) on the selected node; CustomSecondaryLaneSystem skips vanilla markings while
-        /// it is set. User lines already hide vanilla markings; this switch also works on a node
-        /// without any.</summary>
+        /// with All) on the selected node; MarkingSuppressionSystem suppresses vanilla markings
+        /// while it is set. User lines already hide vanilla markings; this switch also works on a
+        /// node without any.</summary>
         private void OnToggleVanillaMarkings()
         {
             if (!TryGetSelectedNode("ToggleVanillaMarkings", out var node)) return;
@@ -323,8 +323,8 @@ namespace TownRoadLane.Systems.UI
 
         /// <summary>Removes every line, segment, area and the vanilla override from the selected
         /// node, restoring the stock markings. Buffers are cleared rather than removed: emission
-        /// then sees empty sets and despawns all the mod's lanes and Area entities, and
-        /// CustomSecondaryLaneSystem regenerates the vanilla markings.</summary>
+        /// then sees empty sets and despawns all the mod's lanes and Area entities, and vanilla
+        /// SecondaryLaneSystem regenerates the vanilla markings.</summary>
         private void OnResetNode()
         {
             if (!TryGetSelectedNode("ResetNode", out var node)) return;

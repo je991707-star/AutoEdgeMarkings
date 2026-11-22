@@ -24,7 +24,7 @@ namespace TownRoadLane.Systems.Prefabs
     ///    exactly one tick at the block start and one at the block end; RequireContinue=false keeps
     ///    both ends.
     ///
-    /// Vanilla prefabs are never edited. CustomSecondaryLaneSystem places and cuts the lines.
+    /// Vanilla prefabs are never edited. Vanilla SecondaryLaneSystem places and cuts the lines.
     /// </summary>
     public partial class ParkingLineCloneSystem : GameSystemBase
     {

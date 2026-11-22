@@ -22,8 +22,8 @@ namespace TownRoadLane.Components
     }
 
     /// <summary>
-    /// Per-edge or per-node override read by <see cref="CustomSecondaryLaneSystem"/>: with
-    /// <see cref="HideAll"/> set, no vanilla marking lanes are generated on the entity. The panel's
+    /// Per-edge or per-node override read by <see cref="MarkingSuppressionSystem"/>: with
+    /// <see cref="HideAll"/> set, vanilla marking lanes on the entity are suppressed. The panel's
     /// "hide vanilla markings" toggle sets it.
     /// </summary>
     [FormerlySerializedAs("TownRoadLane.MarkingOverride, TownRoadLane")]

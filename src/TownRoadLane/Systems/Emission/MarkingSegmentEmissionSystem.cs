@@ -27,8 +27,9 @@ namespace TownRoadLane.Systems.Emission
     /// math exactly.
     ///
     /// The diff compares keys only. A line whose style or road changed gets new sublanes because
-    /// <see cref="CustomSecondaryLaneSystem"/> deletes all lanes of an updated node that has user
-    /// lines, including ours, and this system respawns them on the next frame.
+    /// vanilla <see cref="SecondaryLaneSystem"/> deletes old sublanes of an updated node (while
+    /// <see cref="MarkingSuppressionSystem"/> suppresses vanilla replacements), and this system
+    /// respawns ours on the next frame.
     ///
     /// The diff only runs on frames where something could have changed it: a segment or line
     /// buffer was written, the number of our sublanes changed behind our back (the case above),

@@ -17,9 +17,10 @@ using TownRoadLane.Diagnostics;
 namespace TownRoadLane
 {
     /// <summary>
-    /// Entry point. Replaces the vanilla <see cref="SecondaryLaneSystem"/> with
-    /// <see cref="CustomSecondaryLaneSystem"/> and registers the prefab clone systems, the node
-    /// marking tool and the systems that turn user-drawn lines and fills into game entities.
+    /// Entry point. Keeps the vanilla <see cref="SecondaryLaneSystem"/> enabled and registers the
+    /// prefab clone systems, <see cref="MarkingSuppressionSystem"/> (to hide vanilla markings on
+    /// overridden or user-marked nodes), the node marking tool and the systems that turn
+    /// user-drawn lines and fills into game entities.
     /// </summary>
     public class Mod : IMod
     {
@@ -97,19 +98,12 @@ namespace TownRoadLane
             updateSystem.UpdateAt<EdgeLineCloneSystem>(SystemUpdatePhase.PrefabUpdate);
             updateSystem.UpdateAt<ParkingLineCloneSystem>(SystemUpdatePhase.PrefabUpdate);
 
-            // Only the secondary lane pass (markings) is replaced; LaneSystem and traffic lanes are
-            // untouched.
-            var vanilla = updateSystem.World.GetOrCreateSystemManaged<SecondaryLaneSystem>();
-            bool wasEnabled = vanilla.Enabled;
-            vanilla.Enabled = false;
-            log.Info($"vanilla SecondaryLaneSystem disabled (was Enabled={wasEnabled})");
-
-            // Must run in Modification4B, where vanilla SecondaryLaneSystem runs and
-            // AllowBarrier<ModificationBarrier4B> applies (Game.Common.SystemOrder). In Modification4,
-            // SafeCommandBufferSystem.CreateCommandBuffer throws "Trying to create
-            // EntityCommandBuffer when it's not allowed!".
-            updateSystem.UpdateAt<CustomSecondaryLaneSystem>(SystemUpdatePhase.Modification4B);
-            log.Info($"CustomSecondaryLaneSystem registered at Modification4B");
+            // Keep vanilla SecondaryLaneSystem enabled for full compatibility with game patches
+            // and mods such as Road Builder. Instead of replacing it, MarkingSuppressionSystem
+            // runs in Modification5 right before SecondaryLaneReferencesSystem to remove vanilla
+            // markings on suppressed edges/nodes before they enter SubLane buffers or render batches.
+            updateSystem.UpdateBefore<MarkingSuppressionSystem, SecondaryLaneReferencesSystem>(SystemUpdatePhase.Modification5);
+            log.Info("MarkingSuppressionSystem registered before SecondaryLaneReferencesSystem at Modification5 (vanilla SecondaryLaneSystem kept enabled)");
 
             // There is deliberately no system that reapplies settings at runtime: refreshing the
             // clone prefabs (UpdatePrefab) in a live world leaves existing sublanes with stale
@@ -117,8 +111,10 @@ namespace TownRoadLane
             // Settings apply on the next save load through the clone systems' PrefabUpdate pass.
 
             // ToolBaseSystem adds itself to ToolSystem.tools in OnCreate; registering is enough.
+            // Game.UpdateSystem does not read Unity's [UpdateBefore]/[UpdateAfter] attributes, so
+            // ordering is declared explicitly here.
             updateSystem.UpdateAt<MarkingNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
-            updateSystem.UpdateAt<MarkingToolHotkeySystem>(SystemUpdatePhase.Modification1);
+            updateSystem.UpdateBefore<MarkingToolHotkeySystem, MarkingNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             // Idle unless the marking tool is active; writes to OverlayRenderSystem.Buffer.
             updateSystem.UpdateAt<MarkingOverlaySystem>(SystemUpdatePhase.Rendering);
 
@@ -127,20 +123,17 @@ namespace TownRoadLane
             // cannot work: the vanilla decal shaders need DOTS instance properties
             // (colossal_CurveMatrix) that only the BatchRendererGroup pipeline supplies.
             //
-            // Modification1 runs before LaneSystem (4), SecondaryLaneSystem (4B) and
-            // SecondaryLaneReferencesSystem (5), which adds the emitted sublanes to the node's
-            // SubLane buffer. Ordering inside Modification1 comes from [UpdateBefore]/[UpdateAfter]
-            // on the classes: migration, line topology, line emission; line topology, area
-            // topology, area emission.
+            // Modification1 runs before LaneSystem (4), SecondaryLaneSystem (4B),
+            // MarkingSuppressionSystem (5) and SecondaryLaneReferencesSystem (5).
             updateSystem.UpdateAt<MarkingPairMigrationSystem>(SystemUpdatePhase.Modification1);
-            updateSystem.UpdateAt<MarkingTopologySystem>(SystemUpdatePhase.Modification1);
-            updateSystem.UpdateAt<MarkingSegmentEmissionSystem>(SystemUpdatePhase.Modification1);
-            updateSystem.UpdateAt<MarkingAreaTopologySystem>(SystemUpdatePhase.Modification1);
-            updateSystem.UpdateAt<MarkingAreaEmissionSystem>(SystemUpdatePhase.Modification1);
+            updateSystem.UpdateAfter<MarkingTopologySystem, MarkingPairMigrationSystem>(SystemUpdatePhase.Modification1);
+            updateSystem.UpdateAfter<MarkingSegmentEmissionSystem, MarkingTopologySystem>(SystemUpdatePhase.Modification1);
+            updateSystem.UpdateAfter<MarkingAreaTopologySystem, MarkingTopologySystem>(SystemUpdatePhase.Modification1);
+            updateSystem.UpdateAfter<MarkingAreaEmissionSystem, MarkingAreaTopologySystem>(SystemUpdatePhase.Modification1);
             // Runs after vanilla Game.Areas.GeometrySystem (Modification2B) and replaces its
             // shrink-and-budget ear clipping, which can leave fills invisible, with a full
             // triangulation of the real outline.
-            updateSystem.UpdateAt<MarkingAreaTriangulationSystem>(SystemUpdatePhase.Modification2B);
+            updateSystem.UpdateAfter<MarkingAreaTriangulationSystem, Game.Areas.GeometrySystem>(SystemUpdatePhase.Modification2B);
 
             updateSystem.UpdateAt<TownRoadLaneUISystem>(SystemUpdatePhase.UIUpdate);
         }

@@ -13,8 +13,9 @@ namespace TownRoadLane.Components
     /// Not serialized. The game saves the sublanes themselves, so a load brings them back
     /// untagged. <see cref="MarkingTopologySystem"/> rebuilds every node with lines after a load
     /// (its state is not saved either) and tags the node Updated;
-    /// <see cref="CustomSecondaryLaneSystem"/> then removes all of the node's old lanes, the
-    /// untagged copies included, and emission spawns tagged ones.
+    /// vanilla <see cref="Game.Net.SecondaryLaneSystem"/> then removes all of the node's old
+    /// lanes, the untagged copies included, <see cref="MarkingSuppressionSystem"/> strips any
+    /// regenerated vanilla markings, and emission spawns tagged ones.
     /// </summary>
     public struct TRLSegmentLink : IComponentData
     {

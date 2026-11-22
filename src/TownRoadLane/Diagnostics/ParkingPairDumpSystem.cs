@@ -16,7 +16,7 @@ using CarLane = Game.Net.CarLane;
 namespace TownRoadLane.Diagnostics
 {
     /// <summary>
-    /// One-shot dump for the parking-line pairing in <c>CustomSecondaryLaneSystem</c>. For up to
+    /// One-shot dump for the parking-line pairing in vanilla <c>SecondaryLaneSystem</c>. For up to
     /// 20 road edges with parking lanes, logs every parking and car edge lane with its prefab
     /// name and flags, to show which lane prefabs a road type actually uses.
     ///
