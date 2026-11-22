@@ -264,11 +264,11 @@ namespace TownRoadLane
             ParkingLineStyleEnum.YellowDashed => "Yellow Dashed Line Mesh - Long",
             ParkingLineStyleEnum.YellowSolid => "Yellow Solid Line Mesh",
             ParkingLineStyleEnum.WhiteSolid_G87 => CustomLineMeshFactory.kCrispWhiteSolid,
-            ParkingLineStyleEnum.WhiteDashed_G87 => CustomLineMeshFactory.kCrispWhiteDashed,
+            ParkingLineStyleEnum.WhiteDashed_G87 => CustomLineMeshFactory.kCrispWhiteParkingDashed,
             ParkingLineStyleEnum.YellowSolid_G87 => CustomLineMeshFactory.kCrispYellowSolid,
-            ParkingLineStyleEnum.YellowDashed_G87 => CustomLineMeshFactory.kCrispYellowDashed,
+            ParkingLineStyleEnum.YellowDashed_G87 => CustomLineMeshFactory.kCrispYellowParkingDashed,
             ParkingLineStyleEnum.BlueSolid_G87 => CustomLineMeshFactory.kBlueSolid,
-            ParkingLineStyleEnum.BlueDashed_G87 => CustomLineMeshFactory.kBlueDashed,
+            ParkingLineStyleEnum.BlueDashed_G87 => CustomLineMeshFactory.kBlueParkingDashed,
             _ => "White Dashed Line Mesh - Dense",
         };
 

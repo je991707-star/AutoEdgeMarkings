@@ -25,12 +25,17 @@ namespace TownRoadLane.Systems.Prefabs
         public const string kCrispYellowDashed = "TRL Crisp Yellow Dashed Mesh";
         public const string kCurb = "TRL Curb Mesh";
         public const string kBlueSolid = "TRL Blue Solid Mesh";
-        public const string kBlueDashed = "TRL Blue Dashed Mesh";
         public const string kWhiteTerminal = "TRL White Terminal Mesh";
         public const string kYellowTerminal = "TRL Yellow Terminal Mesh";
+        // Parking-line variants on the short, dense dash geometry; the lane-divider dash above
+        // makes a parking edge read as an extra driving lane.
+        public const string kCrispWhiteParkingDashed = "TRL Crisp White Parking Dashed Mesh";
+        public const string kCrispYellowParkingDashed = "TRL Crisp Yellow Parking Dashed Mesh";
+        public const string kBlueParkingDashed = "TRL Blue Parking Dashed Mesh";
 
         private const string kVanillaSolidSource = "White Solid Line Mesh";
         private const string kVanillaDashedSource = "White Dashed Line Mesh";
+        private const string kVanillaDenseDashedSource = "White Dashed Line Mesh - Dense";
 
         // Retain asset wrappers for the process lifetime so neither GC nor weak caches drop them.
         private static readonly List<SurfaceAsset> s_PinnedSurfaces = new List<SurfaceAsset>();
@@ -71,9 +76,11 @@ namespace TownRoadLane.Systems.Prefabs
             new() { name = kCrispYellowDashed,sourceVanillaMesh = kVanillaDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kCrispYellowDashed, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.78f, dashFraction: 0.54f) },
             new() { name = kCurb,             sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateCurbTexture(), drawOrderOffset = 1 },
             new() { name = kBlueSolid,        sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kBlueSolid, ProceduralTextureFactory.kPaintBlue, widthFraction: 0.72f) },
-            new() { name = kBlueDashed,       sourceVanillaMesh = kVanillaDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kBlueDashed, ProceduralTextureFactory.kPaintBlue, widthFraction: 0.72f, dashFraction: 0.52f) },
             new() { name = kWhiteTerminal,    sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kWhiteTerminal, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.88f) },
             new() { name = kYellowTerminal,   sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateSolidLineTexture(kYellowTerminal, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.88f) },
+            new() { name = kCrispWhiteParkingDashed,  sourceVanillaMesh = kVanillaDenseDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kCrispWhiteParkingDashed, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f, dashFraction: 0.54f) },
+            new() { name = kCrispYellowParkingDashed, sourceVanillaMesh = kVanillaDenseDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kCrispYellowParkingDashed, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.78f, dashFraction: 0.54f) },
+            new() { name = kBlueParkingDashed,        sourceVanillaMesh = kVanillaDenseDashedSource, buildTexture = () => ProceduralTextureFactory.CreateDashedLineTexture(kBlueParkingDashed, ProceduralTextureFactory.kPaintBlue, widthFraction: 0.72f, dashFraction: 0.52f) },
         };
 
         /// <summary>All vanilla source mesh names required to build the custom line meshes.</summary>
@@ -81,6 +88,7 @@ namespace TownRoadLane.Systems.Prefabs
         {
             kVanillaSolidSource,
             kVanillaDashedSource,
+            kVanillaDenseDashedSource,
         };
 
         /// <summary>
