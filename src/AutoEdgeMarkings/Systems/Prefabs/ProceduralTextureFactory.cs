@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using Colossal.IO.AssetDatabase;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -52,6 +55,58 @@ namespace AutoEdgeMarkings.Systems.Prefabs
 
             // HideAndDontSave includes DontUnloadUnusedAsset, so Unity never unloads it.
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, mipChain: true, linear: false)
+            {
+                name = name,
+                wrapMode = TextureWrapMode.Repeat,
+                filterMode = FilterMode.Trilinear,
+                anisoLevel = 8,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            tex.SetPixels32(pixels);
+            tex.Apply(updateMipmaps: true, makeNoLongerReadable: false);
+            return tex;
+        }
+
+        /// <summary>Turns a vanilla dashed line into a solid one with the same lateral profile:
+        /// each texture column (U, across the line) takes its most opaque pixel along V.</summary>
+        public static Texture2D FillDashGaps(string name, SurfaceAsset source)
+        {
+            if (!source.TryGetTexture("_BaseColorMap", out var texAsset))
+                throw new InvalidOperationException("source surface has no _BaseColorMap");
+            if (!(texAsset.Load() is Texture2D src))
+                throw new InvalidOperationException("_BaseColorMap is not a Texture2D");
+
+            // Blit + ReadPixels works whether or not the vanilla texture is CPU-readable or compressed.
+            int w = src.width, h = src.height;
+            var rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
+            var prevActive = RenderTexture.active;
+            var read = new Texture2D(w, h, TextureFormat.RGBA32, mipChain: false, linear: false);
+            Color32[] pixels;
+            try
+            {
+                Graphics.Blit(src, rt);
+                RenderTexture.active = rt;
+                read.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+                read.Apply(false);
+                pixels = read.GetPixels32();
+            }
+            finally
+            {
+                RenderTexture.active = prevActive;
+                RenderTexture.ReleaseTemporary(rt);
+                UnityEngine.Object.Destroy(read);
+            }
+
+            var column = new Color32[w];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (pixels[y * w + x].a > column[x].a) column[x] = pixels[y * w + x];
+            if (column.All(c => c.a == 0))
+                throw new InvalidOperationException("_BaseColorMap read back fully transparent");
+            for (int y = 0; y < h; y++)
+                Array.Copy(column, 0, pixels, y * w, w);
+
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, mipChain: true, linear: false)
             {
                 name = name,
                 wrapMode = TextureWrapMode.Repeat,

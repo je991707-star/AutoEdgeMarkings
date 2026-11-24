@@ -25,7 +25,6 @@ namespace AutoEdgeMarkings.Systems.Prefabs
         // Parking dashes use the short, dense dash pattern; the lane-divider dash above makes a
         // parking edge read as an extra driving lane.
         public const string kParkingDashed = "AEM Parking Dashed Mesh";
-        // Narrower than the edge line so the parking edge doesn't compete with the curb line.
         public const string kParkingSolid = "AEM Parking Solid Mesh";
 
         private const string kVanillaSolidSource = "White Solid Line Mesh";
@@ -60,16 +59,19 @@ namespace AutoEdgeMarkings.Systems.Prefabs
         {
             public string name;
             public string sourceVanillaMesh;
-            // Null keeps the vanilla albedo, which is where the dash pattern lives.
-            public Func<Texture2D> buildTexture;
+            // Gets the vanilla source surface. Null keeps the vanilla albedo, which is where the
+            // dash pattern lives.
+            public Func<SurfaceAsset, Texture2D> buildTexture;
         }
 
         private static readonly MeshSpec[] kSpecs =
         {
-            new() { name = kCrispWhiteSolid,  sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kCrispWhiteSolid, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f) },
-            new() { name = kCrispWhiteDashed, sourceVanillaMesh = kVanillaDashedSource, buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kCrispWhiteDashed, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f, dashFraction: 0.54f) },
-            new() { name = kCrispYellowSolid, sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kCrispYellowSolid, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.78f) },
-            new() { name = kParkingSolid,     sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kParkingSolid, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.45f) },
+            new() { name = kCrispWhiteSolid,  sourceVanillaMesh = kVanillaSolidSource,  buildTexture = _ => ProceduralTextureFactory.CreateLineTexture(kCrispWhiteSolid, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f) },
+            new() { name = kCrispWhiteDashed, sourceVanillaMesh = kVanillaDashedSource, buildTexture = _ => ProceduralTextureFactory.CreateLineTexture(kCrispWhiteDashed, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f, dashFraction: 0.54f) },
+            new() { name = kCrispYellowSolid, sourceVanillaMesh = kVanillaSolidSource,  buildTexture = _ => ProceduralTextureFactory.CreateLineTexture(kCrispYellowSolid, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.78f) },
+            // Same geometry and vanilla albedo as the parking dashes with the gaps filled in, so the
+            // solid line is exactly as wide as the dashes.
+            new() { name = kParkingSolid,     sourceVanillaMesh = kVanillaDenseDashedSource, buildTexture = src => ProceduralTextureFactory.FillDashGaps(kParkingSolid, src) },
             // Parking dashes keep the vanilla dense albedo: its short dash pattern is in the texture,
             // so a procedural one-dash-per-tile texture turns it back into lane-divider dashes.
             new() { name = kParkingDashed,    sourceVanillaMesh = kVanillaDenseDashedSource },
@@ -132,7 +134,7 @@ namespace AutoEdgeMarkings.Systems.Prefabs
                 texAsset = Database.AddAsset<TextureAsset>(
                     AssetDataPath.Create(kAssetSubPath, spec.name + "_BaseColorMap"),
                     Colossal.Hash128.CreateGuid(spec.name + "_BaseColorMap"));
-                texAsset.SetData(spec.buildTexture());
+                texAsset.SetData(spec.buildTexture(srcSurface));
                 texAsset.Load(0, TextureAsset.KeepOnCPU.Object);
                 s_PinnedTextures.Add(texAsset);
             }
