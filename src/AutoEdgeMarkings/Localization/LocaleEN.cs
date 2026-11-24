@@ -36,11 +36,11 @@ namespace AutoEdgeMarkings.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingLineStyle)), "Parking line style" },
                 { _setting.GetOptionDescLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingLineStyle)),
-                    "The longitudinal line drawn along the parking zone. All styles are built in. Changes take effect after the game is restarted." },
+                    "The white line drawn along the parking zone: short dense dashes, or a thin continuous line. Changes take effect after the game is restarted." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingEndStyle)), "Parking end-tick style" },
                 { _setting.GetOptionDescLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingEndStyle)),
-                    "The short perpendicular tick at the start and end of a parking block. \"None\" disables the ticks. All styles are built in. Changes take effect after the game is restarted." },
+                    "The short white perpendicular tick at the start and end of a parking block. \"None\" disables the ticks. Changes take effect after the game is restarted." },
 
                 { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.EdgeLineStyleEnum.WhiteSolid), "White solid" },
                 { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.EdgeLineStyleEnum.WhiteSolidThick), "White solid (thick)" },
@@ -50,24 +50,11 @@ namespace AutoEdgeMarkings.Localization
                 { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.EdgeLineStyleEnum.WhiteDashed_G87), "White dashed (crisp)" },
                 { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.EdgeLineStyleEnum.YellowSolid_G87), "Yellow solid (crisp)" },
 
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.WhiteDashedDense), "White dashed (dense)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.WhiteDashed), "White dashed" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.WhiteSolid), "White solid" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.YellowDashed), "Yellow dashed" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.YellowSolid), "Yellow solid" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.WhiteSolid_G87), "White solid (crisp)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.WhiteDashed_G87), "White dashed (crisp)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.YellowSolid_G87), "Yellow solid (crisp)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.YellowDashed_G87), "Yellow dashed (crisp)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.BlueSolid_G87), "Blue solid" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.BlueDashed_G87), "Blue dashed" },
+                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.Dashed), "White dashed (short)" },
+                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.Solid), "White solid (thin)" },
 
                 { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.None), "None" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.WhiteSolid), "White solid" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.WhiteSolidThick), "White solid (thick)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.WhiteTerminal_G87), "White terminal line" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.YellowTerminal_G87), "Yellow terminal line" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.BlueSolid_G87), "Blue solid" },
+                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.Solid), "White solid" },
             };
         }
 

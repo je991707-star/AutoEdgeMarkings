@@ -22,14 +22,11 @@ namespace AutoEdgeMarkings.Systems.Prefabs
         public const string kCrispWhiteSolid = "AEM Crisp White Solid Mesh";
         public const string kCrispWhiteDashed = "AEM Crisp White Dashed Mesh";
         public const string kCrispYellowSolid = "AEM Crisp Yellow Solid Mesh";
-        public const string kBlueSolid = "AEM Blue Solid Mesh";
-        public const string kWhiteTerminal = "AEM White Terminal Mesh";
-        public const string kYellowTerminal = "AEM Yellow Terminal Mesh";
-        // Parking-line variants on the short, dense dash geometry; the lane-divider dash above
-        // makes a parking edge read as an extra driving lane.
-        public const string kCrispWhiteParkingDashed = "AEM Crisp White Parking Dashed Mesh";
-        public const string kCrispYellowParkingDashed = "AEM Crisp Yellow Parking Dashed Mesh";
-        public const string kBlueParkingDashed = "AEM Blue Parking Dashed Mesh";
+        // Parking dashes use the short, dense dash pattern; the lane-divider dash above makes a
+        // parking edge read as an extra driving lane.
+        public const string kParkingDashed = "AEM Parking Dashed Mesh";
+        // Narrower than the edge line so the parking edge doesn't compete with the curb line.
+        public const string kParkingSolid = "AEM Parking Solid Mesh";
 
         private const string kVanillaSolidSource = "White Solid Line Mesh";
         private const string kVanillaDashedSource = "White Dashed Line Mesh";
@@ -65,8 +62,6 @@ namespace AutoEdgeMarkings.Systems.Prefabs
             public string sourceVanillaMesh;
             // Null keeps the vanilla albedo, which is where the dash pattern lives.
             public Func<Texture2D> buildTexture;
-            // _BaseColor multiplier; null = white.
-            public Color? tint;
         }
 
         private static readonly MeshSpec[] kSpecs =
@@ -74,14 +69,10 @@ namespace AutoEdgeMarkings.Systems.Prefabs
             new() { name = kCrispWhiteSolid,  sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kCrispWhiteSolid, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f) },
             new() { name = kCrispWhiteDashed, sourceVanillaMesh = kVanillaDashedSource, buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kCrispWhiteDashed, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.78f, dashFraction: 0.54f) },
             new() { name = kCrispYellowSolid, sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kCrispYellowSolid, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.78f) },
-            new() { name = kBlueSolid,        sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kBlueSolid, ProceduralTextureFactory.kPaintBlue, widthFraction: 0.72f) },
-            new() { name = kWhiteTerminal,    sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kWhiteTerminal, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.88f) },
-            new() { name = kYellowTerminal,   sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kYellowTerminal, ProceduralTextureFactory.kPaintYellow, widthFraction: 0.88f) },
+            new() { name = kParkingSolid,     sourceVanillaMesh = kVanillaSolidSource,  buildTexture = () => ProceduralTextureFactory.CreateLineTexture(kParkingSolid, ProceduralTextureFactory.kPaintWhite, widthFraction: 0.45f) },
             // Parking dashes keep the vanilla dense albedo: its short dash pattern is in the texture,
             // so a procedural one-dash-per-tile texture turns it back into lane-divider dashes.
-            new() { name = kCrispWhiteParkingDashed,  sourceVanillaMesh = kVanillaDenseDashedSource },
-            new() { name = kCrispYellowParkingDashed, sourceVanillaMesh = kVanillaDenseDashedSource, tint = (Color)ProceduralTextureFactory.kPaintYellow },
-            new() { name = kBlueParkingDashed,        sourceVanillaMesh = kVanillaDenseDashedSource, tint = (Color)ProceduralTextureFactory.kPaintBlue },
+            new() { name = kParkingDashed,    sourceVanillaMesh = kVanillaDenseDashedSource },
         };
 
         /// <summary>All vanilla source mesh names required to build the custom line meshes.</summary>
@@ -154,7 +145,7 @@ namespace AutoEdgeMarkings.Systems.Prefabs
             surfaceAsset.CopyFrom(srcSurface);
             if (texAsset != null) surfaceAsset.UpdateTexture("_BaseColorMap", texAsset);
             if (surfaceAsset.HasProperty("_BaseColor"))
-                surfaceAsset.UpdateColors(new[] { new KeyValuePair<string, Color>("_BaseColor", spec.tint ?? Color.white) });
+                surfaceAsset.UpdateColors(new[] { new KeyValuePair<string, Color>("_BaseColor", Color.white) });
             // Pin refcount >= 1 so BatchMeshSystem never unloads this in-memory surface.
             surfaceAsset.Load(0, loadTextures: true, TextureAsset.KeepOnCPU.Object, useVT: false);
             s_PinnedSurfaces.Add(surfaceAsset);

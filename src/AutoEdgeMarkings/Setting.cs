@@ -105,13 +105,11 @@ namespace AutoEdgeMarkings
 
         [SettingsUISection(kSection, kParkingGroup)]
         [SettingsUIDisableByCondition(typeof(AutoEdgeMarkingsSetting), nameof(IsParkingDisabled))]
-        // Default uses the built-in crisp white dashed style. The "_G87" suffix marks the built-in
-        // crisp styles (historical name from the G87 decals they replaced).
-        public ParkingLineStyleEnum ParkingLineStyle { get; set; } = ParkingLineStyleEnum.WhiteDashed_G87;
+        public ParkingLineStyleEnum ParkingLineStyle { get; set; } = ParkingLineStyleEnum.Dashed;
 
         [SettingsUISection(kSection, kParkingGroup)]
         [SettingsUIDisableByCondition(typeof(AutoEdgeMarkingsSetting), nameof(IsParkingDisabled))]
-        public ParkingEndStyleEnum ParkingEndStyle { get; set; } = ParkingEndStyleEnum.WhiteSolid;
+        public ParkingEndStyleEnum ParkingEndStyle { get; set; } = ParkingEndStyleEnum.Solid;
 
         // There is deliberately no runtime "reapply" button. Refreshing the clone prefabs
         // (UpdatePrefab) while a world is live leaves existing sublanes with stale PrefabRefs, and
@@ -144,8 +142,8 @@ namespace AutoEdgeMarkings
             EdgeLineStyle = EdgeLineStyleEnum.WhiteSolid;
             YellowLeftLineEnabled = true;
             ParkingMarkingsEnabled = true;
-            ParkingLineStyle = ParkingLineStyleEnum.WhiteDashed_G87;
-            ParkingEndStyle = ParkingEndStyleEnum.WhiteSolid;
+            ParkingLineStyle = ParkingLineStyleEnum.Dashed;
+            ParkingEndStyle = ParkingEndStyleEnum.Solid;
             VerboseLogging = false;
 #if DEBUG
             DiagnosticDumps = false;
@@ -166,33 +164,12 @@ namespace AutoEdgeMarkings
         };
 
         /// <summary>Resolves the chosen longitudinal parking-line style to a vanilla or built-in render-prefab name.</summary>
-        public string ParkingLineMeshName() => ParkingLineStyle switch
-        {
-            ParkingLineStyleEnum.WhiteDashedDense => "White Dashed Line Mesh - Dense",
-            ParkingLineStyleEnum.WhiteDashed => "White Dashed Line Mesh",
-            ParkingLineStyleEnum.WhiteSolid => "White Solid Line Mesh",
-            ParkingLineStyleEnum.YellowDashed => "Yellow Dashed Line Mesh - Long",
-            ParkingLineStyleEnum.YellowSolid => "Yellow Solid Line Mesh",
-            ParkingLineStyleEnum.WhiteSolid_G87 => CustomLineMeshFactory.kCrispWhiteSolid,
-            ParkingLineStyleEnum.WhiteDashed_G87 => CustomLineMeshFactory.kCrispWhiteParkingDashed,
-            ParkingLineStyleEnum.YellowSolid_G87 => CustomLineMeshFactory.kCrispYellowSolid,
-            ParkingLineStyleEnum.YellowDashed_G87 => CustomLineMeshFactory.kCrispYellowParkingDashed,
-            ParkingLineStyleEnum.BlueSolid_G87 => CustomLineMeshFactory.kBlueSolid,
-            ParkingLineStyleEnum.BlueDashed_G87 => CustomLineMeshFactory.kBlueParkingDashed,
-            _ => "White Dashed Line Mesh - Dense",
-        };
+        public string ParkingLineMeshName() => ParkingLineStyle == ParkingLineStyleEnum.Solid
+            ? CustomLineMeshFactory.kParkingSolid
+            : CustomLineMeshFactory.kParkingDashed;
 
-        /// <summary>Resolves the chosen end-tick style to a vanilla or built-in render-prefab name; null means no end ticks.</summary>
-        public string ParkingEndMeshName() => ParkingEndStyle switch
-        {
-            ParkingEndStyleEnum.None => null,
-            ParkingEndStyleEnum.WhiteSolid => "White Solid Line Mesh",
-            ParkingEndStyleEnum.WhiteSolidThick => "White Solid Line Mesh - Thick",
-            ParkingEndStyleEnum.WhiteTerminal_G87 => CustomLineMeshFactory.kWhiteTerminal,
-            ParkingEndStyleEnum.YellowTerminal_G87 => CustomLineMeshFactory.kYellowTerminal,
-            ParkingEndStyleEnum.BlueSolid_G87 => CustomLineMeshFactory.kBlueSolid,
-            _ => "White Solid Line Mesh",
-        };
+        /// <summary>Resolves the chosen end-tick style to a render-prefab name; null means no end ticks.</summary>
+        public string ParkingEndMeshName() => ParkingEndStyle == ParkingEndStyleEnum.None ? null : "White Solid Line Mesh";
 
         public enum EdgeLineStyleEnum
         {
@@ -207,27 +184,14 @@ namespace AutoEdgeMarkings
 
         public enum ParkingLineStyleEnum
         {
-            WhiteDashedDense,
-            WhiteDashed,
-            WhiteSolid,
-            YellowDashed,
-            YellowSolid,
-            WhiteSolid_G87,
-            WhiteDashed_G87,
-            YellowSolid_G87,
-            YellowDashed_G87,
-            BlueSolid_G87,
-            BlueDashed_G87,
+            Dashed,
+            Solid,
         }
 
         public enum ParkingEndStyleEnum
         {
             None,
-            WhiteSolid,
-            WhiteSolidThick,
-            WhiteTerminal_G87,
-            YellowTerminal_G87,
-            BlueSolid_G87,
+            Solid,
         }
     }
 }

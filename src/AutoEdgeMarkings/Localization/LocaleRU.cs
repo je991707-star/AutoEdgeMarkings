@@ -36,11 +36,11 @@ namespace AutoEdgeMarkings.Localization
 
                 { _setting.GetOptionLabelLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingLineStyle)), "Стиль линии парковки" },
                 { _setting.GetOptionDescLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingLineStyle)),
-                    "Продольная линия вдоль парковочной зоны. Все стили встроены в мод. Изменения вступают в силу после перезапуска игры." },
+                    "Белая линия вдоль парковочной зоны: короткий частый пунктир или тонкая сплошная. Изменения вступают в силу после перезапуска игры." },
 
                 { _setting.GetOptionLabelLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingEndStyle)), "Стиль концевой черты парковки" },
                 { _setting.GetOptionDescLocaleID(nameof(AutoEdgeMarkingsSetting.ParkingEndStyle)),
-                    "Короткая поперечная черта в начале и конце парковочного квартала. «Нет» отключает черты. Все стили встроены в мод. Изменения вступают в силу после перезапуска игры." },
+                    "Короткая поперечная черта в начале и конце парковочного квартала. «Нет» отключает черты. Изменения вступают в силу после перезапуска игры." },
 
                 { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.EdgeLineStyleEnum.WhiteSolid), "Белая сплошная" },
                 { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.EdgeLineStyleEnum.WhiteSolidThick), "Белая сплошная (толстая)" },
@@ -50,24 +50,11 @@ namespace AutoEdgeMarkings.Localization
                 { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.EdgeLineStyleEnum.WhiteDashed_G87), "Белый пунктир (чёткий)" },
                 { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.EdgeLineStyleEnum.YellowSolid_G87), "Жёлтая сплошная (чёткая)" },
 
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.WhiteDashedDense), "Белый пунктир (частый)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.WhiteDashed), "Белый пунктир" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.WhiteSolid), "Белая сплошная" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.YellowDashed), "Жёлтый пунктир" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.YellowSolid), "Жёлтая сплошная" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.WhiteSolid_G87), "Белая сплошная (чёткая)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.WhiteDashed_G87), "Белый пунктир (чёткий)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.YellowSolid_G87), "Жёлтая сплошная (чёткая)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.YellowDashed_G87), "Жёлтый пунктир (чёткий)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.BlueSolid_G87), "Синяя сплошная" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.BlueDashed_G87), "Синий пунктир" },
+                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.Dashed), "Белый пунктир (короткий)" },
+                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingLineStyleEnum.Solid), "Белая сплошная (тонкая)" },
 
                 { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.None), "Нет" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.WhiteSolid), "Белая сплошная" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.WhiteSolidThick), "Белая сплошная (толстая)" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.WhiteTerminal_G87), "Белая концевая линия" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.YellowTerminal_G87), "Жёлтая концевая линия" },
-                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.BlueSolid_G87), "Синяя сплошная" },
+                { _setting.GetEnumValueLocaleID(AutoEdgeMarkingsSetting.ParkingEndStyleEnum.Solid), "Белая сплошная" },
             };
         }
 

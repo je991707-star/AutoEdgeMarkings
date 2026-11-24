@@ -13,7 +13,6 @@ namespace AutoEdgeMarkings.Systems.Prefabs
         // Road-paint palette tuned to match CS2's daylight/HDRP exposure without blowing out.
         public static readonly Color32 kPaintWhite = new Color32(236, 238, 240, 255);
         public static readonly Color32 kPaintYellow = new Color32(232, 186, 46, 255);
-        public static readonly Color32 kPaintBlue = new Color32(58, 128, 214, 255);
 
         /// <summary>Longitudinal road-marking decal texture (U = lateral across lane width,
         /// V = longitudinal along curve). <paramref name="dashFraction"/> null = solid line;
